@@ -6,6 +6,6 @@
 #include <windows.h>
 
 int main() {
-  MessageBoxA(NULL, "Meow-meow!!", "=^..^=", MB_OK);
+  MessageBoxA(NULL, "Hello, Prishtina!", "=^..^=", MB_OK);
   return 0;
 }

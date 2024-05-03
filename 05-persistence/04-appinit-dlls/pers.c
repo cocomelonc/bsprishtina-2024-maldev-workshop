@@ -10,7 +10,7 @@
 int main(int argc, char* argv[]) {
   HKEY hkey = NULL;
   // malicious DLL
-  const char* dll = "Z:\\malware-persistence-101\\04\\hack.dll";
+  const char* dll = "Z:\\hack.dll";
   // activation
   DWORD act = 1;
 

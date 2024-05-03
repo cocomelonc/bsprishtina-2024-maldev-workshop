@@ -1,4 +1,4 @@
-# 05 - evasion: function call obfuscation
+# 04 - evasion: function call obfuscation
 
 In this example we will study function call obfuscation. So what is this? Why malware developers and red teamers need to learn it?    
 

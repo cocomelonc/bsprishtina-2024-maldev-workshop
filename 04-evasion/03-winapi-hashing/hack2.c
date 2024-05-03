@@ -46,6 +46,6 @@ int main() {
   LPVOID addr = getAPIAddr(mod, 17036696);
   printf("0x%p\n", addr);
   fnMessageBoxA myMessageBoxA = (fnMessageBoxA)addr;
-  myMessageBoxA(NULL, "Meow-meow!","=^..^=", MB_OK);
+  myMessageBoxA(NULL, "Hello, Prishtina!","=^..^=", MB_OK);
   return 0;
 }

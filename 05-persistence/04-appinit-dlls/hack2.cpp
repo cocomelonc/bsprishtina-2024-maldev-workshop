@@ -46,4 +46,4 @@ BOOL APIENTRY DllMain(HMODULE hModule,  DWORD  nReason, LPVOID lpReserved) {
   case DLL_THREAD_DETACH:
     break;
   }
-  return TRU
+  return TRUE

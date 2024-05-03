@@ -11,7 +11,7 @@ int main(int argc, char* argv[]) {
   HKEY hkey = NULL;
 
   // malicious app
-  const char* exe = "Z:\\malware-persistence-101\\07\\hack.exe";
+  const char* exe = "Z:\\hack.exe";
 
   // hijacked app
   const char* wf = "WerFault.exe -pr 1";
