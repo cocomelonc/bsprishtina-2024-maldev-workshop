@@ -1,5 +1,5 @@
 /*
- * Malware Development for Ethical Hackers
+ * malware development
  * hack.c
  * run payload without encryption and
  * function call obfuscation
