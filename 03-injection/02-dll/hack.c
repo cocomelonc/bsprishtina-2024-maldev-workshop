@@ -9,7 +9,7 @@
 #include <windows.h>
 #include <tlhelp32.h>
 
-char evilDLL[] = "evil.dll";
+char evilDLL[] = "C:\\evil.dll";
 unsigned int evilLen = sizeof(evilDLL) + 1;
 
 int main(int argc, char* argv[]) {
