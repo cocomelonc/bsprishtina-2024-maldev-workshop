@@ -9,7 +9,7 @@
 
 extern "C" {
   __declspec(dllexport) BOOL WINAPI runMe(void) {
-  MessageBoxA(NULL, "Meow, Prishtina!", "=^..^=", MB_OK);
+  MessageBoxA(NULL, "Hello, Prishtina!", "=^..^=", MB_OK);
   return TRUE;
   }
 }
