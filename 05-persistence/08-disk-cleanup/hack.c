@@ -6,7 +6,22 @@
 */
 #include <windows.h>
 
-int WINAPI WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance, LPSTR lpCmdLine, int nCmdShow) {
-  MessageBoxA(NULL, "Hello, Prishtina!","=^..^=", MB_OK);
-  return 0;
+BOOL APIENTRY DllMain(HMODULE hModule,  DWORD  nReason, LPVOID lpReserved) {
+  switch (nReason) {
+  case DLL_PROCESS_ATTACH:
+    MessageBox(
+      NULL,
+      "Hello, Prishtina!",
+      "=^..^=",
+      MB_OK
+    );
+    break;
+  case DLL_PROCESS_DETACH:
+    break;
+  case DLL_THREAD_ATTACH:
+    break;
+  case DLL_THREAD_DETACH:
+    break;
+  }
+  return TRUE;
 }

