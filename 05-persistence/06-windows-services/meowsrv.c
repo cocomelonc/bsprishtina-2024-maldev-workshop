@@ -1,8 +1,8 @@
 /*
  * Malware Persistence 101
-* meowsrv.cpp
-* windows high level persistence via windows services
-* author: @cocomelonc
+ * meowsrv.c
+ * windows high level persistence via windows services
+ * author: @cocomelonc
 */
 #include <windows.h>
 #include <stdio.h>
@@ -80,7 +80,7 @@ void ControlHandler(DWORD request) {
       return;
 
     default:
-      break;COM DLL hijack
+      break;
   }
   SetServiceStatus(hStatus,  &serviceStatus);
   return;
