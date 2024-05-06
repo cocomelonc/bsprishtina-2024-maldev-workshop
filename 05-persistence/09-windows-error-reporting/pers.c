@@ -1,6 +1,6 @@
 /*
  * Malware Persistence 101
- * pers.cpp
+ * pers.c
  * windows persistense via WerFault.exe
  * author: @cocomelonc
 */
