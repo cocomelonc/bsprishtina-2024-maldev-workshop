@@ -1,5 +1,7 @@
 # BSides Prishtina 2024 Malware Development Workshop
 
+![banner](./BSides-Prishtina-workshop.png)     
+
 The course is divided into four logical sections:    
 - Malware development tricks and techniques (classic injection tricks, DLL injection tricks, shellcode running)    
 - AV evasion tricks (Anti-VM, Anti-Sandbox, Anti-disassembling)    
