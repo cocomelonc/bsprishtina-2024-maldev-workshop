@@ -10,6 +10,7 @@
 #include <unistd.h>
 #include <windows.h>
 #include <wincrypt.h>
+#pragma comment (lib, "crypt32.lib")
 
 int b64decode(const BYTE * src, unsigned int srcLen, char * dst, unsigned int dstLen) {
   DWORD outLen;
@@ -69,27 +70,9 @@ unsigned char* RC4(unsigned char *plaintext, unsigned char* ciphertext, unsigned
   KSA(s, key, keyL);
   keystream = PRGA(s, messageL);
 
-  // printf("-------plaintext-----------\n");
-  // for(i = 0; i < messageL; i++) {
-  //   printf("%02hhx\t", plaintext[i]);
-  // }
-  // printf("\n\n");
-  //
-  // printf("-------key-----------\n");
-  // for(i = 0; i < keyL; i++) {
-  //   printf("%02hhx\t", key[i]);
-  // }
-  // printf("\n\n");
-
   for (i = 0; i < messageL; i++) {
     ciphertext[i] = plaintext[i] ^ keystream[i];
   }
-
-  // printf("-------ciphertext-----------\n");
-  // for(i = 0; i < messageL; i++) {
-  //   printf("%02hhx\t", ciphertext[i]);
-  // }
-  // printf("\n\n");
   return ciphertext;
 }
 

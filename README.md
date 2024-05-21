@@ -16,3 +16,4 @@ Knowledge of assembly language basics is not required but will be an advantage.
 Examples and recommended literature:    
 
 [https://cocomelonc.github.io/book/2022/07/16/mybook.html](https://cocomelonc.github.io/book/2022/07/16/mybook.html)    
+[https://packt.link/MalwareDevelopment](https://packt.link/MalwareDevelopment)     
