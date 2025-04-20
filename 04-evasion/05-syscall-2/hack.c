@@ -9,7 +9,7 @@ https://cocomelonc.github.io/malware/2023/06/09/syscalls-2.html
 #include <string.h>
 #include <windows.h>
 
-char evilDLL[] = "C:\\temp\\evil.dll";
+char evilDLL[] = "C:\\evil.dll"; //13
 unsigned int evilLen = sizeof(evilDLL) + 1;
 
 extern "C" NTSTATUS myNtAllocateVirtualMemory(

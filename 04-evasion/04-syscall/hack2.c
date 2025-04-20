@@ -37,5 +37,6 @@ void printSyscallStub(char* funcName) {
 
 int main() {
   printSyscallStub("NtAllocateVirtualMemory");
+  printSyscallStub("NtCreateDirectoryObject");
   return 0;
 }
