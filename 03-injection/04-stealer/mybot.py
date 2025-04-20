@@ -55,7 +55,7 @@ async def echo(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
 def main() -> None:
     """Start the bot."""
     # Create the Application and pass it your bot's token.
-    application = Application.builder().token("6385065600:AAHZrjg0t566bdCaH2cagfgkIaVgRNUqjws").build()
+    application = Application.builder().token("8077364032:AAHTJbcbULWSH7dXAX3l8xpmUZzP6EeL7VQ").build()
 
     # on different commands - answer in Telegram
     application.add_handler(CommandHandler("start", start))
