@@ -121,7 +121,7 @@ int main(int argc, char* argv[]) {
   InternetCloseHandle(hHttpFile);
   InternetCloseHandle(hSession);
 
-  pid = findMyProc(argv[1]);
+  pid = findMyProc("mspaint.exe");
   if (pid == 0) {
     printf("PID not found :( exiting...\n");
     return -1;

