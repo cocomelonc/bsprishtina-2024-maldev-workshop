@@ -52,6 +52,7 @@ void decryptFile(const char* inputFile, const char* outputFile, const BYTE* aesK
   // Create output file for writing
   hOutputFile = CreateFileA(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
   if (hOutputFile == INVALID_HANDLE_VALUE) {
+    CloseHandle(hInputFile);
     return;
   }
 
@@ -59,18 +60,17 @@ void decryptFile(const char* inputFile, const char* outputFile, const BYTE* aesK
   if (!CryptAcquireContextA(&hCryptProv, NULL, "Microsoft Enhanced RSA and AES Cryptographic Provider", PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
     CryptDestroyKey(hKey);
     CryptReleaseContext(hCryptProv, 0);
+    return;
   }
 
   HCRYPTHASH hHash;
   if (!CryptCreateHash(hCryptProv, CALG_SHA_256, 0, 0, &hHash)) {
     CryptDestroyKey(hKey);
     CryptReleaseContext(hCryptProv, 0);
+    return;
   }
 
-  BYTE utf8ByteArray[32];
-  strcpy(utf8ByteArray, aesKey);
-
-  if (!CryptHashData(hHash, utf8ByteArray, key_size, 0)) {
+  if (!CryptHashData(hHash, (BYTE*)aesKey, key_size, 0)) {
     CryptDestroyKey(hKey);
     CryptReleaseContext(hCryptProv, 0);
     return;
@@ -106,7 +106,6 @@ void decryptFile(const char* inputFile, const char* outputFile, const BYTE* aesK
       CryptReleaseContext(hCryptProv, 0);
       break;
     }
-
     DWORD written = 0;
     if (!WriteFile(hOutputFile, chunk, out_len, &written, NULL)) {
       CloseHandle(hOutputFile);
@@ -115,30 +114,25 @@ void decryptFile(const char* inputFile, const char* outputFile, const BYTE* aesK
     memset(chunk, 0, chunk_size);
   }
 
-  // Delete the original .meoware file after decryption
+  // Delete the original file after decryption
   if (!DeleteFileA(inputFile)) {
-    printf("error deleting file %s: %d\n", inputFile, GetLastError());
+    printf("Error deleting file %s: %d\n", inputFile, GetLastError());
   } else {
-    printf("successfully deleted the original file: %s\n", inputFile);
+    printf("Successfully deleted the original file: %s\n", inputFile);
   }
 
-  // Rename decrypted file to original file name by removing ".meoware" extension
+  // Try renaming the output file back to original name
   char newFileName[MAX_PATH];
-  strcpy_s(newFileName, MAX_PATH, inputFile);
-  
-  // Remove ".meoware" extension
-  char* extension = strstr(newFileName, ".meoware");
-  if (extension != NULL) {
-    *extension = '\0'; // Null-terminate at the start of ".meoware"
-    
-    if (MoveFileA(outputFile, newFileName)) {
-      printf("Restored original file: %s\n", newFileName);
-    } else {
-      printf("Error restoring original file name: %s\n", GetLastError());
-    }
+  snprintf(newFileName, MAX_PATH, "%s", inputFile);  // Use the original file name
+
+  // Try renaming output file (with .decrypted extension) back to original file name
+  if (MoveFileA(outputFile, newFileName)) {
+    printf("Successfully restored original file: %s\n", newFileName);
+  } else {
+    printf("Error restoring original file: %d\n", GetLastError());
   }
 
-  // Clean up
+  // Ensure no file handles are left open
   if (hKey != NULL) {
     CryptDestroyKey(hKey);
   }
