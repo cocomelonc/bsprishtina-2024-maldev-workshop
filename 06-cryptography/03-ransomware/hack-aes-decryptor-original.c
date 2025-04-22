@@ -37,116 +37,131 @@ struct ThreadData {
 void decryptFile(const char* inputFile, const char* outputFile, const BYTE* aesKey) {
   HCRYPTPROV hCryptProv = NULL;
   HCRYPTKEY hKey = NULL;
+  HCRYPTHASH hHash = NULL;
   HANDLE hInputFile = INVALID_HANDLE_VALUE;
   HANDLE hOutputFile = INVALID_HANDLE_VALUE;
-
-  DWORD len = strlen(aesKey);
-  DWORD key_size = len * sizeof(aesKey[0]);
+  BYTE* chunk = NULL;
+  BOOL success = FALSE;
 
   // Open input file for reading
-  hInputFile = CreateFileA(inputFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
+  hInputFile = CreateFileA(inputFile, GENERIC_READ, FILE_SHARE_READ, NULL, 
+                         OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
   if (hInputFile == INVALID_HANDLE_VALUE) {
-    return;
+      printf("Error opening input file %s: %d\n", inputFile, GetLastError());
+      goto cleanup;
   }
 
   // Create output file for writing
-  hOutputFile = CreateFileA(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
+  hOutputFile = CreateFileA(outputFile, GENERIC_WRITE, 0, NULL, 
+                           CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
   if (hOutputFile == INVALID_HANDLE_VALUE) {
-    CloseHandle(hInputFile);
-    return;
+      printf("Error creating output file %s: %d\n", outputFile, GetLastError());
+      goto cleanup;
   }
 
-  // Cryptographic service provider
-  if (!CryptAcquireContextA(&hCryptProv, NULL, "Microsoft Enhanced RSA and AES Cryptographic Provider", PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
-    CryptDestroyKey(hKey);
-    CryptReleaseContext(hCryptProv, 0);
-    return;
+  // Initialize crypto provider
+  if (!CryptAcquireContextA(&hCryptProv, NULL, MS_ENH_RSA_AES_PROV_A, 
+                          PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
+      printf("CryptAcquireContext failed: %d\n", GetLastError());
+      goto cleanup;
   }
 
-  HCRYPTHASH hHash;
+  // Create hash object
   if (!CryptCreateHash(hCryptProv, CALG_SHA_256, 0, 0, &hHash)) {
-    CryptDestroyKey(hKey);
-    CryptReleaseContext(hCryptProv, 0);
-    return;
+      printf("CryptCreateHash failed: %d\n", GetLastError());
+      goto cleanup;
   }
 
-  if (!CryptHashData(hHash, (BYTE*)aesKey, key_size, 0)) {
-    CryptDestroyKey(hKey);
-    CryptReleaseContext(hCryptProv, 0);
-    return;
+  // Hash the key
+  if (!CryptHashData(hHash, aesKey, (DWORD)strlen((const char*)aesKey), 0)) {
+      printf("CryptHashData failed: %d\n", GetLastError());
+      goto cleanup;
   }
 
+  // Derive the key
   if (!CryptDeriveKey(hCryptProv, CALG_AES_128, hHash, 0, &hKey)) {
-    CryptDestroyKey(hKey);
-    CryptReleaseContext(hCryptProv, 0);
-    return;
+      printf("CryptDeriveKey failed: %d\n", GetLastError());
+      goto cleanup;
   }
 
-  const size_t chunk_size = IN_CHUNK_SIZE;
-  BYTE* chunk = (BYTE*)malloc(chunk_size);
-  DWORD out_len = 0;
+  // Allocate buffer for file chunks
+  chunk = (BYTE*)malloc(IN_CHUNK_SIZE);
+  if (!chunk) {
+      printf("Memory allocation failed\n");
+      goto cleanup;
+  }
 
+  // Get file size
+  LARGE_INTEGER fileSize;
+  if (!GetFileSizeEx(hInputFile, &fileSize)) {
+      printf("GetFileSize failed: %d\n", GetLastError());
+      goto cleanup;
+  }
+
+  // Decrypt file in chunks
+  DWORD bytesRead = 0;
+  DWORD totalRead = 0;
   BOOL isFinal = FALSE;
-  DWORD readTotalSize = 0;
-  BOOL bResult = FALSE;
+  
+  while (ReadFile(hInputFile, chunk, IN_CHUNK_SIZE, &bytesRead, NULL) && bytesRead > 0) {
+      totalRead += bytesRead;
+      isFinal = (totalRead >= fileSize.QuadPart);
 
-  DWORD inputSize = GetFileSize(hInputFile, NULL);
+      DWORD chunkLen = bytesRead;
+      if (!CryptDecrypt(hKey, NULL, isFinal, 0, chunk, &chunkLen)) {
+          printf("CryptDecrypt failed: %d\n", GetLastError());
+          goto cleanup;
+      }
 
-  while (bResult = ReadFile(hInputFile, chunk, IN_CHUNK_SIZE, &out_len, NULL)) {
-    if (0 == out_len) {
-      break;
-    }
-    readTotalSize += out_len;
-    if (readTotalSize >= inputSize) {
-      isFinal = TRUE;
-    }
-
-    if (!CryptDecrypt(hKey, NULL, isFinal, 0, chunk, &out_len)) {
-      CryptDestroyKey(hKey);
-      CryptReleaseContext(hCryptProv, 0);
-      break;
-    }
-    DWORD written = 0;
-    if (!WriteFile(hOutputFile, chunk, out_len, &written, NULL)) {
-      CloseHandle(hOutputFile);
-      break;
-    }
-    memset(chunk, 0, chunk_size);
+      DWORD bytesWritten = 0;
+      if (!WriteFile(hOutputFile, chunk, chunkLen, &bytesWritten, NULL) || bytesWritten != chunkLen) {
+          printf("WriteFile failed: %d\n", GetLastError());
+          goto cleanup;
+      }
   }
 
-  // Delete the original file after decryption
+  // Close all handles before file operations
+  if (hKey) CryptDestroyKey(hKey);
+  if (hHash) CryptDestroyHash(hHash);
+  if (hCryptProv) CryptReleaseContext(hCryptProv, 0);
+  if (hInputFile != INVALID_HANDLE_VALUE) CloseHandle(hInputFile);
+  if (hOutputFile != INVALID_HANDLE_VALUE) CloseHandle(hOutputFile);
+  hKey = NULL;
+  hHash = NULL;
+  hCryptProv = NULL;
+  hInputFile = INVALID_HANDLE_VALUE;
+  hOutputFile = INVALID_HANDLE_VALUE;
+
+  // Delete the original file
   if (!DeleteFileA(inputFile)) {
-    printf("Error deleting file %s: %d\n", inputFile, GetLastError());
-  } else {
-    printf("Successfully deleted the original file: %s\n", inputFile);
+      printf("Error deleting original file %s: %d\n", inputFile, GetLastError());
+      goto cleanup;
   }
 
-  // Try renaming the output file back to original name
-  char newFileName[MAX_PATH];
-  snprintf(newFileName, MAX_PATH, "%s", inputFile);  // Use the original file name
-
-  // Try renaming output file (with .decrypted extension) back to original file name
-  if (MoveFileA(outputFile, newFileName)) {
-    printf("Successfully restored original file: %s\n", newFileName);
-  } else {
-    printf("Error restoring original file: %d\n", GetLastError());
+  // Rename the decrypted file to original name
+  if (!MoveFileA(outputFile, inputFile)) {
+      printf("Error renaming decrypted file %s to %s: %d\n", 
+            outputFile, inputFile, GetLastError());
+      goto cleanup;
   }
 
-  // Ensure no file handles are left open
-  if (hKey != NULL) {
-    CryptDestroyKey(hKey);
-  }
-  if (hCryptProv != NULL) {
-    CryptReleaseContext(hCryptProv, 0);
-  }
-  if (hInputFile != INVALID_HANDLE_VALUE) {
-    CloseHandle(hInputFile);
-  }
-  if (hOutputFile != INVALID_HANDLE_VALUE) {
-    CloseHandle(hOutputFile);
+  success = TRUE;
+
+cleanup:
+  if (!success) {
+      // Clean up partially decrypted file if operation failed
+      if (hOutputFile != INVALID_HANDLE_VALUE) {
+          CloseHandle(hOutputFile);
+          DeleteFileA(outputFile);
+      }
   }
 
-  free(chunk);
+  if (chunk) free(chunk);
+  if (hKey) CryptDestroyKey(hKey);
+  if (hHash) CryptDestroyHash(hHash);
+  if (hCryptProv) CryptReleaseContext(hCryptProv, 0);
+  if (hInputFile != INVALID_HANDLE_VALUE) CloseHandle(hInputFile);
+  if (hOutputFile != INVALID_HANDLE_VALUE) CloseHandle(hOutputFile);
 }
 
 // encryption function to be called by each thread
