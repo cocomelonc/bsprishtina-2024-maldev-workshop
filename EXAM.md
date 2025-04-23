@@ -7,22 +7,21 @@
 - Materials: Refer to the 03-winapi directory for basic examples.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 2: Basic DLL Injection (10 points)
+### Task 2: Basic DLL Injection (10 points) ++++++ 2h 34min
 
 - Objective: Write a basic program that injects a DLL into a running process using Windows API functions.
 - Skills Tested: DLL injection, `CreateRemoteThread`, `VirtualAllocEx`.
 - Materials: Refer to the 03-injection directory for basic examples.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 3: Basic Code Injection (10 points)
+### Task 3: Basic Code Injection (10 points) ++++++++ 1h 39min
 
 - Objective: Implement payload injection.
 - Skills Tested: Code injection methods.
-- Skills Tested: DLL injection, `CreateRemoteThread`, `VirtualAllocEx`.
 - Materials: Refer to the 03-injection directory for basic examples.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 4: Dropper Creation (10 points)
+### Task 4: Dropper Creation (10 points) ++++++ 1h 09min
 
 - Objective: Write a dropper that drops a payload (e.g., a DLL or executable) on a victim's system and executes it.
 - Skills Tested: File handling, process creation, and execution.
@@ -36,7 +35,7 @@
 - Materials: Understand simple information stealing.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 6: Advanced Stealer (Information Stealer 2, 10 points)
+### Task 6: Advanced Stealer (Information Stealer 2, 20 points) ++++++
 
 - Objective: Develop a simple host information stealer that extracts information from file.
 `C:\\Users\user1\Desktop\password.txt`
@@ -44,7 +43,7 @@
 - Materials: Understand how you can extract info from file and send it to C2.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 7: Simple File Encryption (20 points)
+### Task 7: Simple File Encryption (20 points, XOR) +++++ 2h
 
 - Objective: Implement an encryption/decryption routine (e.g., using XOR or a basic algorithm) that encrypts a file and decrypts it back to its original form.
 - Skills Tested: Cryptography basics, file handling.
@@ -57,7 +56,7 @@
 - Skills Tested: Service creation, Windows API.
 - Materials: Use `CreateService` to create a Windows service that starts on boot.
 
-### Task 9: Ransomware (Basic Version) (20 points)
+### Task 9: Ransomware (Basic Version) (20 points) +++++ 41 min
 
 - Objective: Create a simple ransomware that encrypts files in a directory and appends a `.bahrain` extension.
 - Skills Tested: File manipulation, encryption, and ransom note creation.
@@ -79,3 +78,8 @@
 - Skills Tested: Full malware creation with encryption, persistence, and evasion techniques.
 - Materials: Combine encryption, persistence, and evasion techniques from previous tasks.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
+
+First Blood: 28 min
+First Bonus: 1h 22min
+Pass exam: .......... (200 points, 1 macro, 1 persistence for pass)
+Final points: 
