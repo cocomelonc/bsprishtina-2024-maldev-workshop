@@ -1,6 +1,6 @@
 ﷽
 
-### Task 1: Write simple reverse shell (10 points)
+### Task 1: Write simple reverse shell (10 points) ++++++ 39 min
 
 - Objective: Write a basic program that create reverse shell with Windows API functions.
 - Skills Tested: Understanding WINAPI.
@@ -29,7 +29,7 @@
 - Materials: Create an executable that downloads or copies a payload and runs it.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 5: Basic Stealer (Information Stealer, 10 points)
+### Task 5: Basic Stealer (Information Stealer, 10 points) ++++++++ second blood 30 min
 
 - Objective: Develop a simple host information stealer that extracts information.
 - Skills Tested: Basic C2 connection.
@@ -64,7 +64,7 @@
 - Materials: Modify the `encryptFile` function to create a ransom scenario.
 - Bonus points: Add persistence (10 points, service: 50 points), macro (20 points)
 
-### Task 10: Combine Dropper + Reverse shell (20 points)
+### Task 10: Combine Dropper + Reverse shell (20 points) +++++ first blood 28 min
 - Objective: Combine a dropper that installs your reverse shell.
 - Skills Tested: Combining techniques - dropper with revshell.
 - Materials: The dropper from Task 4 and reverse shell from Task 1.
