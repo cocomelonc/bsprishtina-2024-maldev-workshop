@@ -64,45 +64,32 @@ int sendFileToTgBot(const char* filePath) {
   HINTERNET hSession = NULL;
   HINTERNET hConnect = NULL;
   HINTERNET hRequest = NULL;
-  
+
   const char* url = "https://api.telegram.org/bot" TOKEN "/sendDocument";
-  
   hSession = WinHttpOpen(L"UserAgent", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, WINHTTP_NO_PROXY_NAME, WINHTTP_NO_PROXY_BYPASS, 0);
   if (hSession == NULL) {
-    fprintf(stderr, "WinHttpOpen. Error: %d\n", GetLastError());
+    fprintf(stderr, "WinHttpOpen failed: %lu\n", GetLastError());
     return 1;
   }
-
   hConnect = WinHttpConnect(hSession, L"api.telegram.org", INTERNET_DEFAULT_HTTPS_PORT, 0);
   if (hConnect == NULL) {
-    fprintf(stderr, "WinHttpConnect. Error: %d\n", GetLastError());
+    fprintf(stderr, "WinHttpConnect failed: %lu\n", GetLastError());
     WinHttpCloseHandle(hSession);
     return 1;
   }
+  hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/bot" TOKEN "/sendDocument?chat_id=" CHAT_ID,
+                  NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
 
-  hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/bot" TOKEN "/sendDocument", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
   if (hRequest == NULL) {
-    fprintf(stderr, "WinHttpOpenRequest. Error: %d\n", GetLastError());
+    fprintf(stderr, "WinHttpOpenRequest failed: %lu\n", GetLastError());
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
     return 1;
   }
 
-  // Prepare the multipart form-data
-  char boundary[] = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
-  char header[512];
-  snprintf(header, sizeof(header), "Content-Type: multipart/form-data; boundary=%s", boundary);
-
-  // Prepare the POST data for file and parameters
-  char postData[4096];
-  snprintf(postData, sizeof(postData),
-           "--%s\r\nContent-Disposition: form-data; name=\"chat_id\"\r\n\r\n%s\r\n"
-           "--%s\r\nContent-Disposition: form-data; name=\"document\"; filename=\"%s\"\r\nContent-Type: application/octet-stream\r\n\r\n",
-           boundary, CHAT_ID, boundary, filePath);
-
-  // Open the file
+  const char* boundary = "----WebKitFormBoundary7MA4YWxkTrZu0gW";
   FILE* file = fopen(filePath, "rb");
-  if (file == NULL) {
+  if (!file) {
     fprintf(stderr, "Error opening file: %s\n", filePath);
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
@@ -110,76 +97,70 @@ int sendFileToTgBot(const char* filePath) {
     return 1;
   }
 
-  // Read the file into a buffer
   fseek(file, 0, SEEK_END);
   long fileSize = ftell(file);
-  fseek(file, 0, SEEK_SET);
-  char* fileBuffer = (char*)malloc(fileSize);
-  fread(fileBuffer, 1, fileSize, file);
-  fclose(file);
-
-  // Send the request with the file data
-  DWORD bytesSent = 0;
-  if (!WinHttpSendRequest(hRequest,
-                          header, -1, 
-                          postData, strlen(postData), 
-                          strlen(postData) + fileSize, 
-                          0)) {
-    fprintf(stderr, "WinHttpSendRequest. Error: %d\n", GetLastError());
+  rewind(file);
+  char* postData = NULL;
+  size_t postDataLen = snprintf(NULL, 0, 
+                  "--%s\r\nContent-Disposition: form-data; name=\"document\"; filename=\"test.pdf\"\r\nContent-Type: application/octet-stream\r\n\r\n",
+                  boundary) + fileSize + strlen("\r\n--" boundary "--\r\n") + 1;
+  postData = (char*)malloc(postDataLen);
+  if (!postData) {
+    fclose(file);
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
-    free(fileBuffer);
+    fprintf(stderr, "Memory allocation failed!\n"); //Improved error handling.
     return 1;
   }
+  size_t bytes_written = snprintf(postData, postDataLen,
+                  "--%s\r\nContent-Disposition: form-data; name=\"document\"; filename=\"test.pdf\"\r\nContent-Type: application/octet-stream\r\n\r\n",
+                  boundary);
+  fread(postData + bytes_written, 1, fileSize, file); //Read file content directly into postData
+  fclose(file);     
+  bytes_written += fileSize;
+  snprintf(postData + bytes_written, postDataLen - bytes_written, "\r\n--%s--\r\n", boundary);  // Boundary end
 
-  // Send the file content
-  if (!WinHttpWriteData(hRequest, fileBuffer, fileSize, &bytesSent)) {
-    fprintf(stderr, "WinHttpWriteData. Error: %d\n", GetLastError());
+  char header[256];
+  snprintf(header, sizeof(header),
+       "Content-Type: multipart/form-data; boundary=%s\r\n"
+       "Content-Length: %zu\r\n",
+       boundary, strlen(postData));
+
+  if (!WinHttpSendRequest(hRequest, header, -1, postData, (DWORD)strlen(postData), strlen(postData), 0)) {
+    fprintf(stderr, "WinHttpSendRequest failed: %lu\n", GetLastError());
+    free(postData);
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
-    free(fileBuffer);
     return 1;
   }
 
-  // Send the boundary end
-  char boundaryEnd[] = "\r\n--" boundary "--\r\n";
-  if (!WinHttpWriteData(hRequest, boundaryEnd, strlen(boundaryEnd), &bytesSent)) {
-    fprintf(stderr, "WinHttpWriteData. Error: %d\n", GetLastError());
-    WinHttpCloseHandle(hRequest);
-    WinHttpCloseHandle(hConnect);
-    WinHttpCloseHandle(hSession);
-    free(fileBuffer);
-    return 1;
-  }
+  free(postData);
 
-  // Receive the response
   DWORD statusCode = 0;
   DWORD statusCodeSize = sizeof(statusCode);
-  if (!WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER, 
-                           WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusCodeSize, 
-                           WINHTTP_NO_HEADER_INDEX)) {
-    fprintf(stderr, "WinHttpQueryHeaders. Error: %d\n", GetLastError());
+
+  if (!WinHttpReceiveResponse(hRequest, NULL) ||  //Check if response was received successfully
+    !WinHttpQueryHeaders(hRequest, WINHTTP_QUERY_STATUS_CODE | WINHTTP_QUERY_FLAG_NUMBER,
+              WINHTTP_HEADER_NAME_BY_INDEX, &statusCode, &statusCodeSize, WINHTTP_NO_HEADER_INDEX)) {
+
+    fprintf(stderr, "Error getting response: %lu\n", GetLastError());
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
-    free(fileBuffer);
     return 1;
   }
 
-  // Check the response
   if (statusCode == 200) {
-    printf("successfully sent file to Telegram bot.\n");
+    printf("File sent successfully.\n");
   } else {
-    printf("failed to send file. HTTP Status Code: %d\n", statusCode);
+    printf("Failed to send file. HTTP Status Code: %d\n", (int)statusCode);
   }
 
-  // Clean up
   WinHttpCloseHandle(hRequest);
   WinHttpCloseHandle(hConnect);
   WinHttpCloseHandle(hSession);
-  free(fileBuffer);
 
   return 0;
 }
