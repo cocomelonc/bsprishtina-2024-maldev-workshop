@@ -24,18 +24,16 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.PermissionRequestErrorListener
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 
+import com.karumi.dexter.listener.PermissionDeniedResponse
+import com.karumi.dexter.listener.PermissionGrantedResponse
+import com.karumi.dexter.listener.single.PermissionListener
+
+import android.content.Context
+
 class HackAllMainActivity : ComponentActivity() {
     private val number = "107"
     private lateinit var cameraButton: Button
     lateinit var receiver: HackAllAirPlaneBroadcastReceiver
-
-    private fun checkCallPermission() {
-        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.CALL_PHONE) == PackageManager.PERMISSION_GRANTED) {
-            startCall()
-        } else {
-            startCallPermissionRequest()
-        }
-    }
 
     private fun startCall() {
         var intent = Intent(Intent.ACTION_CALL)
@@ -43,17 +41,26 @@ class HackAllMainActivity : ComponentActivity() {
         startActivity(intent)
     }
 
-    private val requestPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) {
-        isGranted-> {
-            if (isGranted) {
-                startCall()
-            } else {
-                Toast.makeText(applicationContext, "Hack All call permission denied", Toast.LENGTH_SHORT).show()
-            }
-        }
+    @SuppressLint("NewApi")
+    fun isCallPermissionGranted(context: Context): Boolean {
+        val isGranted = context.checkSelfPermission(Manifest.permission.CALL_PHONE)
+        return isGranted == PackageManager.PERMISSION_GRANTED
     }
-    private fun startCallPermissionRequest() {
-        requestPermissionLauncher.launch(Manifest.permission.CALL_PHONE)
+
+    private fun startCallPermissionRequest(context: Context, onGranted: () -> Unit) {
+        Dexter.withContext(context)
+            .withPermission(Manifest.permission.CALL_PHONE)
+            .withListener(object : PermissionListener {
+                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
+                    onGranted()
+                }
+                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
+                override fun onPermissionRationaleShouldBeShown(
+                    p0: PermissionRequest?,
+                    p1: PermissionToken?
+                ) {
+                }
+            }).check()
     }
 
     private fun requestPermissions() {
@@ -121,7 +128,14 @@ class HackAllMainActivity : ComponentActivity() {
         cameraButton = findViewById(R.id.camButton)
         cameraButton.setOnClickListener {
             requestPermissions()
-            checkCallPermission()
+            if (isCallPermissionGranted(this)) {
+                startCallPermissionRequest(this) {
+                    HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call started\n")
+                    startCall()
+                }
+            } else {
+                HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call permission denied\n")
+            }
         }
 
         receiver = HackAllAirPlaneBroadcastReceiver()
