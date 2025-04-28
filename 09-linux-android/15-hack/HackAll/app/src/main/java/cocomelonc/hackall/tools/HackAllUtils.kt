@@ -97,6 +97,7 @@ class HackAllUtils {
             return HackAllNetworkData(token, id, url)
         }
 
+        // device basic information
         fun getDeviceName(): String {
             fun capitalize(s: String?): String {
                 if (s == null || s.isEmpty()) {

