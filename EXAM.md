@@ -81,5 +81,7 @@
 
 First Blood: 28 min
 First Bonus: 1h 22min
+Passing average scores: 60
+Average time: 20 min
 Pass exam: .......... (200 points, 1 macro, 1 persistence for pass)
-Final points: 170 pts, 3h 15m
+Final points: 170 pts, 3h 15m 370 350-400
