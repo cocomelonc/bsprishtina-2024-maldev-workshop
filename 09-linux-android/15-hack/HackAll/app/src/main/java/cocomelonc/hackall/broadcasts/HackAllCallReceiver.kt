@@ -1,12 +1,8 @@
 package cocomelonc.hackall.broadcasts
-
-import android.Manifest
-import android.annotation.SuppressLint
 import cocomelonc.hackall.tools.HackAllNetwork
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.telephony.TelephonyManager
 
 class HackAllCallReceiver: BroadcastReceiver() {
@@ -23,11 +19,5 @@ class HackAllCallReceiver: BroadcastReceiver() {
                 }
             }
         }
-    }
-
-    @SuppressLint("NewApi")
-    fun isCallIncomePermissionGranted(context: Context): Boolean {
-        val isGranted = context.checkSelfPermission(Manifest.permission.CALL_PHONE)
-        return isGranted == PackageManager.PERMISSION_GRANTED
     }
 }
