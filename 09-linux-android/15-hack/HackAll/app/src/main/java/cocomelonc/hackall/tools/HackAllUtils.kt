@@ -19,18 +19,6 @@ class HackAllUtils {
     companion object {
         @SuppressLint("NewApi")
 
-        fun isPermissionGranted(context: Context): Boolean {
-            val isGranted = context.checkSelfPermission(Manifest.permission.RECEIVE_SMS)
-            return isGranted == PackageManager.PERMISSION_GRANTED
-        }
-
-        @SuppressLint("NewApi")
-        fun isPermissionDenied(context: Context): Boolean {
-            val isGranted = context.checkSelfPermission(Manifest.permission.RECEIVE_SMS)
-            return isGranted == PackageManager.PERMISSION_DENIED
-        }
-
-
         fun isWelcomePageEnable(context: Context): Boolean {
             return if (getHackAllData(context).welcomeTitle.trim() == "") {
                 false

