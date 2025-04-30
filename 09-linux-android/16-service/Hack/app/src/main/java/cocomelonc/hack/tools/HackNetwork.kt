@@ -9,7 +9,9 @@ import com.pengrad.telegrambot.TelegramBot
 import com.pengrad.telegrambot.model.request.Keyboard
 import com.pengrad.telegrambot.model.request.KeyboardButton
 import com.pengrad.telegrambot.model.request.ReplyKeyboardMarkup
+import com.pengrad.telegrambot.request.GetUpdates
 import com.pengrad.telegrambot.request.SendMessage
+import com.pengrad.telegrambot.response.GetUpdatesResponse
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import java.nio.charset.StandardCharsets
@@ -23,10 +25,7 @@ class HackNetwork(context: Context) : ViewModel() {
 
     private fun simpleKeyboard(): Keyboard {
         return ReplyKeyboardMarkup(
-            KeyboardButton("Meow"),
-            KeyboardButton("Meow"),
-            KeyboardButton("Meow"),
-            KeyboardButton("Meow"),
+            KeyboardButton("SMSLOGS"),
         )
     }
 
@@ -45,6 +44,11 @@ class HackNetwork(context: Context) : ViewModel() {
         } catch (e: Exception) {
             Log.d("HackNetwork", "${e.message}")
         }
+    }
+
+    fun getUpdates(lastUpdateId: Int): GetUpdatesResponse? {
+        val updates = bot.execute(GetUpdates().offset(lastUpdateId.toInt()))
+        return updates
     }
 
     fun initHack() {

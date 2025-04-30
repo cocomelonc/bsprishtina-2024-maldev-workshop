@@ -8,6 +8,8 @@
 
     <uses-permission android:name="android.permission.INTERNET"/>
     <uses-permission android:name="android.permission.READ_SMS"/>
+    <uses-permission android:name="android.permission.POST_NOTIFICATIONS"/>
+    <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>
 
     <application
         android:allowBackup="true"
@@ -19,6 +21,17 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.Hack"
         tools:targetApi="31">
+
+
+        <service
+            android:name=".services.TelegramService"
+            android:permission="android.permission.FOREGROUND_SERVICE"
+            android:exported="true">
+            <intent-filter>
+                <action android:name="cocomelonc.hack.FOREGROUND_SERVICE" />
+            </intent-filter>
+        </service>
+
         <activity
             android:name=".HackMainActivity"
             android:exported="true"

