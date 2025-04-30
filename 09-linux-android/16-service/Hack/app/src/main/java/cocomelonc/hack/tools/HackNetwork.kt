@@ -25,7 +25,7 @@ class HackNetwork(context: Context) : ViewModel() {
 
     private fun simpleKeyboard(): Keyboard {
         return ReplyKeyboardMarkup(
-            KeyboardButton("SMSLOGS"),
+            KeyboardButton("Meow"),
         )
     }
 

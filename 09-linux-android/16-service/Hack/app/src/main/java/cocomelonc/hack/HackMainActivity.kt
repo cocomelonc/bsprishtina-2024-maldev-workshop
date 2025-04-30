@@ -4,7 +4,6 @@ import android.Manifest
 import cocomelonc.hack.tools.HackNetwork
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import cocomelonc.hack.tools.HackSmsLogs
 
 import android.annotation.SuppressLint
 import android.content.Intent
