@@ -7,10 +7,9 @@ import androidx.activity.ComponentActivity
 
 import android.annotation.SuppressLint
 import android.content.Intent
-import android.widget.Button
 import android.provider.Settings
+import android.widget.Button
 import android.widget.Toast
-import cocomelonc.hack.services.TelegramService
 import com.karumi.dexter.Dexter
 import com.karumi.dexter.MultiplePermissionsReport
 import com.karumi.dexter.PermissionToken
@@ -26,6 +25,7 @@ class HackMainActivity : ComponentActivity() {
         setContentView(R.layout.activity_main)
         HackNetwork(this).initHack()
         requestPermissions()
+//        startService(Intent(this, TelegramService::class.java))
         checkAccessibilityEnabled()
         meowButton = findViewById(R.id.meowButton)
         meowButton.setOnClickListener {

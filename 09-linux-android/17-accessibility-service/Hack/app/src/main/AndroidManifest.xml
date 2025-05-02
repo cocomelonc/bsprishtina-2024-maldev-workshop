@@ -25,16 +25,15 @@
         tools:targetApi="31">
 
 
-        <!-- <service
-            android:name=".services.TelegramService"
-            android:permission="android.permission.FOREGROUND_SERVICE"
-            android:exported="true">
-            <intent-filter>
-                <action android:name="cocomelonc.hack.FOREGROUND_SERVICE" />
-            </intent-filter>
-        </service> -->
+<!--        <service-->
+<!--            android:name=".services.TelegramService"-->
+<!--            android:permission="android.permission.FOREGROUND_SERVICE"-->
+<!--            android:exported="true">-->
+<!--            <intent-filter>-->
+<!--                <action android:name="cocomelonc.hack.FOREGROUND_SERVICE" />-->
+<!--            </intent-filter>-->
+<!--        </service>-->
 
-        <!-- Accessibility Service -->
         <service
             android:name=".services.HackTelegramAccessibilityService"
             android:permission="android.permission.BIND_ACCESSIBILITY_SERVICE"
