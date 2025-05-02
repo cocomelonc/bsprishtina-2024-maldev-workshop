@@ -29,7 +29,8 @@ class HackNetwork(context: Context) : ViewModel() {
                 val messageToSend = "$message\n\n$info\n\n$meow\n\n${footer2}"
                 bot.execute(SendMessage(id, messageToSend))
             }
-        } catch (e: Exception) {}
+        } catch (e: Exception) {
+        }
     }
 
 }
