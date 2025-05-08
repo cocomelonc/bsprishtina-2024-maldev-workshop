@@ -20,9 +20,14 @@ def mdns_discover(timeout=10):
     print(Colors.BLUE + f"scanning for AirPlay devices via mdns ({timeout}s)..." + Colors.ENDC)
 
     def handle_pkt(pkt):
-        print (pkt.summary())
-        if pkt.haslayer(DNSRR) and "_airplay._tcp.local" in str(pkt[DNSRR].rrname):
+        if pkt.haslayer(DNSRR) and "_airplay._tcp.local" in str(pkt[DNSRR].rrname.lower()):
             print (pkt[DNSRR].rrname)
+            ip = pkt[IP].src
+            if ip not in discovered_targets:
+                print(Colors.GREEN + f"found AirPlay device: {ip}" + Colors.ENDC)
+                discovered_targets.add(ip)
+        if pkt.haslayer(DNSQR) and "_airplay.tcp.local" in str(pkt[DNSQR].qname.lower())):
+            print (pkt[DNSQR].qname)
             ip = pkt[IP].src
             if ip not in discovered_targets:
                 print(Colors.GREEN + f"found AirPlay device: {ip}" + Colors.ENDC)
@@ -49,4 +54,4 @@ if __name__ == "__main__":
             time.sleep(5)
 
     except KeyboardInterrupt:
-        print(Colors.GREEN + "\ninterrupted by user. Exiting." + Colors.ENDC)
+        print(Colors.GREEN + "\ninterrupted by user. exiting." + Colors.ENDC)
