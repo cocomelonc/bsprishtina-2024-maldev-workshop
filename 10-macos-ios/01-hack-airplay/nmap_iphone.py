@@ -23,7 +23,8 @@ def scan_iphone(target_ip):
     ).decode('utf-8')
 
     # search "iPhone"
-    if "iphone" in result.lower():
+    m = re.search(r"62078/tcp (filtered|open)", result.lower())
+    if m:
         print(Colors.GREEN + f"[+] found iphone with ios at {target_ip}" + Colors.ENDC)
         print (result.lower())
     else:
