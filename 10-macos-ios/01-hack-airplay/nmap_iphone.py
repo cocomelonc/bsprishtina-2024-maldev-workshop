@@ -31,15 +31,17 @@ def scan_network(ip_range):
 def scan_iphone(target_ip):
     print(Colors.BLUE + f"[+] scanning {target_ip} for iPhone..." + Colors.ENDC)
     # scan nmap for search iPhone
-    result = subprocess.check_output(
-        ["nmap", "-sV", "-Pn", "-T4", "-A", "-p62078", target_ip],
-        stderr=subprocess.DEVNULL
-    ).decode('utf-8')
 
+    try:
+        result = subprocess.check_output(
+            ["nmap", "-sV", "-Pn", "-T4", "-A", "-p62078", target_ip],
+            stderr=subprocess.DEVNULL
+        ).decode('utf-8')
+    except subprocess.CalledProcessError as e:
+        print(Colors.RED + f"error scanning {target_ip}: {e}" + Colors.ENDC)
+        return
 
-    print (result.lower())
     # search "iPhone"
-    # if "iphone" in result.lower():
     match = re.search(r"62078/tcp (filtered|open)", result.lower())
     if match:
         print(Colors.GREEN + f"[+] found iphone with ios at {target_ip}" + Colors.ENDC)
