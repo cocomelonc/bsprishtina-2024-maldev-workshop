@@ -1,5 +1,7 @@
 # socket programming on iOS arm64
 
+﷽
+
 Building a basic echo server and client (for reverse shells)    
 
 Today we'll explore low-level socket programming on `iOS arm64` by writing a simple TCP echo server and client in pure `C` - and running it on a jailbroken `iPhone` (or emulator). This is a practical and direct way to understand how networking primitives work without the abstraction of high-level frameworks.     

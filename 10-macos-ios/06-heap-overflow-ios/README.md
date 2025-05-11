@@ -1,5 +1,7 @@
 # heap overflow ios (ARM x64)
 
+﷽
+
 Let's Hack the Heap. Today we're diving into a simple but effective heap overflow vulnerability on `iOS ARM64`. This example runs on a jailbroken iPhone and shows how improper use of heap memory (via `strcpy`) can lead to memory corruption and even command injection. Let's get started!      
 
 ### requirements

@@ -1,5 +1,7 @@
 # iOS arm64 assembly - syscalls and fun
 
+﷽
+
 Let's take a break from C and dive directly into `arm64` assembly on `iOS`. Yes, it's possible to write, compile, and run your own low-level assembly code on a jailbroken iPhone - complete with system calls and memory operations. This example walks you through two examples: a memory test and a real `Hello, World!` syscall output.     
 
 ### requirements
