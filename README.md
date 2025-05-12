@@ -7,6 +7,8 @@ The course is divided into four logical sections:
 - AV evasion tricks (Anti-VM, Anti-Sandbox, Anti-disassembling)    
 - Persistence techniques    
 - Cryptographic functions in malware development (exclusive)    
+- Android basic malware development and PoC     
+- iOS basic malware development and PoC     
 
 Most of the examples in this course require an understanding of the Python and C/C++ programming languages.      
 
