@@ -5,15 +5,15 @@ struct ContentView: View {
     
     var body: some View {
         VStack {
-            Text("Ghost Manager Output")
+            Text("Hack manager output")
                 .font(.title)
                 .padding()
             
-            Text(message)  // Displays the message from GhostManager
+            Text(message)  // Displays the message from HackManager
                 .padding()
             
             Button(action: {
-                // When the button is pressed, call the sendMessage function of GhostManager
+                // When the button is pressed, call the sendMessage function of HackManager
                 HackManager.shared.botToken = "YOUR_BOT_TOKEN"
                 HackManager.shared.chatId = "YOUR_CHAT_ID"
                 HackManager.shared.sendMessage()
