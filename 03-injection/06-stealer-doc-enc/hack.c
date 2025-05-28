@@ -12,46 +12,6 @@
 
 #define MAX_TG_MSG_SIZE 512 // by limit 4096
 
-const char* CHAT_ID = "5547299598";
-const wchar_t* HOST = L"api.telegram.org";
-const wchar_t* TOKEN = L"bot";  // my token
-
-// // send text to Telegram
-// int sendToTgBot(const char* message) {
-//   HINTERNET hSession = WinHttpOpen(L"UserAgent", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
-//   if (!hSession) return 1;
-
-//   HINTERNET hConnect = WinHttpConnect(hSession, HOST, INTERNET_DEFAULT_HTTPS_PORT, 0);
-//   if (!hConnect) { WinHttpCloseHandle(hSession); return 1; }
-
-//   wchar_t path[512];
-//   swprintf(path, 512, L"/%s/sendMessage", TOKEN);
-
-//   HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", path, NULL, WINHTTP_NO_REFERER, NULL, WINHTTP_FLAG_SECURE);
-//   if (!hRequest) {
-//     WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession); return 1;
-//   }
-
-//   char body[4096];
-//   snprintf(body, sizeof(body), "chat_id=%s&text=%s", CHAT_ID, message);
-
-//   BOOL result = WinHttpSendRequest(hRequest,
-//     L"Content-Type: application/x-www-form-urlencoded\r\n",
-//     -1, body, strlen(body), strlen(body), 0);
-
-//   if (!result) {
-//     WinHttpCloseHandle(hRequest); WinHttpCloseHandle(hConnect); WinHttpCloseHandle(hSession);
-//     return 1;
-//   }
-
-//   WinHttpReceiveResponse(hRequest, NULL);
-
-//   WinHttpCloseHandle(hRequest);
-//   WinHttpCloseHandle(hConnect);
-//   WinHttpCloseHandle(hSession);
-//   return 0;
-// }
-
 // send data to Telegram channel using winhttp
 int sendToTgBot(const char* message) {
   const char* chatId = "5547299598";
@@ -88,8 +48,14 @@ int sendToTgBot(const char* message) {
   sprintf(requestBody, "chat_id=%s&text=%s", chatId, message);
 
   // set the headers
-  if (!WinHttpSendRequest(hRequest, L"Content-Type: application/x-www-form-urlencoded\r\n", -1, requestBody, strlen(requestBody), strlen(requestBody), 0)) {
-    fprintf(stderr, "WinHttpSendRequest. Error %d has occurred.\n", GetLastError());
+  if (!WinHttpSendRequest(hRequest,
+    L"Content-Type: application/x-www-form-urlencoded\r\n",
+      -1,
+      (LPVOID)requestBody,
+      (DWORD)strlen(requestBody),
+      (DWORD)strlen(requestBody),
+    0)) {
+    fprintf(stderr, "WinHttpSendRequest. error %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
     WinHttpCloseHandle(hSession);
