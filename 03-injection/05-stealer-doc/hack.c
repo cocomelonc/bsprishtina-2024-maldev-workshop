@@ -59,7 +59,7 @@ int sendToTgBot(const char* message) {
 char* readFileContent(const char* filePath) {
   FILE* file = fopen(filePath, "rb");
   if (file == NULL) {
-    perror("Error opening file");
+    perror("error opening file");
     return NULL;
   }
 
@@ -69,7 +69,7 @@ char* readFileContent(const char* filePath) {
 
   char* fileContent = (char*)malloc(fileSize + 1);
   if (fileContent == NULL) {
-    perror("Memory allocation failed");
+    perror("memory allocation failed");
     fclose(file);
     return NULL;
   }
