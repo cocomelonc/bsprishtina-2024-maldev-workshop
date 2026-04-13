@@ -17,11 +17,9 @@ class HackMainActivity : ComponentActivity() {
                 "Meow! ♥\uFE0F",
                 Toast.LENGTH_SHORT
             ).show()
-//            HackNetwork(this).isvmdetected()
             HackNetwork(this).sendTextMessage("Meow! ♥\uFE0F")
         }
         HackNetwork(this).logcpuinfo()
-//        HackNetwork(this).sendTextMessage(HackNetwork(this).getfullcpuinfo())
         HackNetwork(this).sendTextMessage("Meow! ♥\uFE0F")
     }
 }

