@@ -11,7 +11,7 @@
  * technique:
  *   store the API name as an XOR-encrypted byte array, decrypt at
  *   runtime, resolve via GetProcAddress, and call through a typed
- *   function pointer — so the import table and string table never
+ *   function pointer - so the import table and string table never
  *   contain the plain-text name.
  *
  * how cVirtualProtect was generated (key = "secret123"):
@@ -134,7 +134,7 @@ int main(void) {
    * exercise 2 change:
    * original: result = VirtualProtect(payload_mem, ...);
    * updated:  result = pVirtualProtect(payload_mem, ...);
-   * — the string "VirtualProtect" now only exists in encrypted form.
+   * - the string "VirtualProtect" now only exists in encrypted form.
    */
   result = pVirtualProtect(payload_mem, sizeof(payload), PAGE_EXECUTE_READ, &oldprotect);
   if (result != 0) {
