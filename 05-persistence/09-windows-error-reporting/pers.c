@@ -24,7 +24,7 @@ int main(int argc, char* argv[]) {
     RegCloseKey(hkey);
   }
 
-  // startup
+  // // startup
   res = RegOpenKeyEx(HKEY_CURRENT_USER, (LPCSTR)"SOFTWARE\\Microsoft\\Windows\\CurrentVersion\\Run", 0 , KEY_WRITE, &hkey);
   if (res == ERROR_SUCCESS) {
     // create new registry key

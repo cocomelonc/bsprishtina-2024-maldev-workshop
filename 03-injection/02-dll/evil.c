@@ -12,7 +12,7 @@ BOOL APIENTRY DllMain(HMODULE hModule,  DWORD  nReason, LPVOID lpReserved) {
   case DLL_PROCESS_ATTACH:
     MessageBox(
       NULL,
-      "Hello, Prishtina!",
+      "Hello, BSLux!",
       "=^..^=",
       MB_OK
     );

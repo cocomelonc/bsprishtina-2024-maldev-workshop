@@ -12,7 +12,7 @@
 
 // send data to Telegram channel using winhttp
 int sendToTgBot(const char* message) {
-  const char* chatId = "5547299598";
+  const char* chatId = "466662506";
   HINTERNET hSession = NULL;
   HINTERNET hConnect = NULL;
 
@@ -28,7 +28,7 @@ int sendToTgBot(const char* message) {
     WinHttpCloseHandle(hSession);
   }
 
-  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/bot8077364032:AAHTJbcbULWSH7dXAX3l8xpmUZzP6EeL7VQ/sendMessage", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/bot8643474007:AAE1a3Svbp1hpow0L8CE6XEBsCb7-WNSpX8/sendMessage", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
   if (hRequest == NULL) {
     fprintf(stderr, "WinHttpOpenRequest. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hConnect);

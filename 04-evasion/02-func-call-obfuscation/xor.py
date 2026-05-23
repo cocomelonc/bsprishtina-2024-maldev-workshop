@@ -24,5 +24,5 @@ def xor_encrypt(data, key):
     return ciphertext, key
 
 ## key for encrypt/decrypt
-my_secret_key = "secret"
+my_secret_key = "secret123"
 ciphertext, p_key  = xor_encrypt("VirtualAlloc", my_secret_key)

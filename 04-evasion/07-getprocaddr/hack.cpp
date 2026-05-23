@@ -63,6 +63,7 @@ HMODULE myGetModuleHandle(LPCWSTR lModuleName) {
     wcscpy_s(substr, MAX_PATH, lModuleName);
     if (cmpUnicodeStr(substr, mystr)) {
       // returning the DLL base address.
+      printf("0x0%p\n", pEntry->DllBase);
       return (HMODULE)pEntry->DllBase;
     }
   }
