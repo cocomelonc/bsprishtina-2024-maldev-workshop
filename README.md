@@ -2,6 +2,12 @@
 
 ![banner](./BSides-Prishtina-workshop.png)     
 
+### UPDATE
+
+Add new exercises for BSides Prishtina 2026     
+
+![banner](./BSides-Prishtina-workshop-2026.jpeg)          
+
 The course is divided into four logical sections:    
 - Malware development tricks and techniques (classic injection tricks, DLL injection tricks, shellcode running)    
 - AV evasion tricks (Anti-VM, Anti-Sandbox, Anti-disassembling)    
