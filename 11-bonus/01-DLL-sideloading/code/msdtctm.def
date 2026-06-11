@@ -1,0 +1,11 @@
+EXPORTS
+ASCDefer=msdtctm.ASCDefer @7
+ASCDeliverDeferred=msdtctm.ASCDeliverDeferred @6
+ASCGetSafeReference=msdtctm.ASCGetSafeReference @8
+ASCWrapClassFactory=msdtctm.ASCWrapClassFactory @10
+ASCWrapObject=msdtctm.ASCWrapObject @5
+CreateInstance=msdtctm.CreateInstance @9
+DllGetClassObject=msdtctm.DllGetClassObject @11
+DtcMainExt=msdtctm.DtcMainExt @4
+GetTipFunctionalityWorking=msdtctm.GetTipFunctionalityWorking @12
+SetTipFunctionalityWorking=msdtctm.SetTipFunctionalityWorking @13
