@@ -10,11 +10,16 @@
 #include <winhttp.h>
 #include <iphlpapi.h>
 
-#define VT_API_KEY "7e7778f8c29bc4b171512caa6cc81af63ed96832f53e7e35fb706dd320ab8c42"
-#define FILE_ID "379698a4f06f18cb3ad388145cf62f47a8da22852a08dd19b3ef48aaedffd3fa"
+// credentials are loaded at runtime from environment variables VT_API_KEY and FILE_ID
 
 // send data to VirusTotal using winhttp
 int sendToVT(const char* comment) {
+  const char* vt_api_key = getenv("VT_API_KEY");
+  const char* file_id = getenv("FILE_ID");
+  if (!vt_api_key || !file_id) {
+    fprintf(stderr, "VT_API_KEY and FILE_ID environment variables must be set.\n");
+    return 1;
+  }
   HINTERNET hSession = NULL;
   HINTERNET hConnect = NULL;
 
@@ -30,7 +35,9 @@ int sendToVT(const char* comment) {
     WinHttpCloseHandle(hSession);
   }
 
-  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", L"/api/v3/files/" FILE_ID "/comments", NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
+  wchar_t reqPath[256];
+  swprintf(reqPath, 256, L"/api/v3/files/%hs/comments", file_id);
+  HINTERNET hRequest = WinHttpOpenRequest(hConnect, L"POST", reqPath, NULL, WINHTTP_NO_REFERER, WINHTTP_DEFAULT_ACCEPT_TYPES, WINHTTP_FLAG_SECURE);
   if (hRequest == NULL) {
     fprintf(stderr, "WinHttpOpenRequest. error: %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hConnect);
@@ -42,7 +49,9 @@ int sendToVT(const char* comment) {
   snprintf(json_body, sizeof(json_body), "{\"data\": {\"type\": \"comment\", \"attributes\": {\"text\": \"%s\"}}}", comment);
 
   // set the headers
-  if (!WinHttpSendRequest(hRequest, L"x-apikey: " VT_API_KEY "\r\nUser-Agent: vt v.1.0\r\nAccept-Encoding: gzip, deflate\r\nContent-Type: application/json", -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
+  wchar_t headers[512];
+  swprintf(headers, 512, L"x-apikey: %hs\r\nUser-Agent: vt v.1.0\r\nAccept-Encoding: gzip, deflate\r\nContent-Type: application/json", vt_api_key);
+  if (!WinHttpSendRequest(hRequest, headers, -1, (LPVOID)json_body, strlen(json_body), strlen(json_body), 0)) {
     fprintf(stderr, "WinHttpSendRequest. Error %d has occurred.\n", GetLastError());
     WinHttpCloseHandle(hRequest);
     WinHttpCloseHandle(hConnect);
